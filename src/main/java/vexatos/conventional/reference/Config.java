@@ -42,7 +42,8 @@ public class Config {
 			blocksAllowLeftclick
 		);
 		fillBlockList(
-			config.getStringList("allowRightclick", "blocks", new String[0], "Allow right clicking these blocks."), blocksAllowRightclick
+			config.getStringList("allowRightclick", "blocks", new String[0], "Allow right clicking these blocks."),
+			blocksAllowRightclick
 		);
 		fillItemList(
 			config.getStringList("allowRightclick", "items", new String[0], "Allow right clicking these items."),
@@ -134,9 +135,9 @@ public class Config {
 	}
 
 	public void save() {
-		config.get("blocks", "allowLeftclick", new String[0]).setValues(getUIDs(blocksAllowLeftclick));
-		config.get("blocks", "allowRightclick", new String[0]).setValues(getUIDs(blocksAllowRightclick));
-		config.get("items", "allowRightclick", new String[0]).setValues(getUIDs(itemsAllowRightclick));
+		config.get("blocks", "allowLeftclick", new String[0], "Allow left clicking these blocks.").setValues(getUIDs(blocksAllowLeftclick));
+		config.get("blocks", "allowRightclick", new String[0], "Allow right clicking these blocks.").setValues(getUIDs(blocksAllowRightclick));
+		config.get("items", "allowRightclick", new String[0], "Allow right clicking these items.").setValues(getUIDs(itemsAllowRightclick));
 		config.save();
 	}
 

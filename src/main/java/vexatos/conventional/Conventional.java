@@ -93,7 +93,7 @@ public class Conventional {
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onRightClick(PlayerInteractEvent event) {
+	public void onInteract(PlayerInteractEvent event) {
 		if(event.isCanceled()) {
 			return;
 		}
