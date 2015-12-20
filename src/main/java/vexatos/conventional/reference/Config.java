@@ -19,6 +19,7 @@ public class Config {
 
 	private Configuration config;
 	//private List<Pair<Block, Integer>> blocksAllowAny = new ArrayList<Pair<Block, Integer>>();
+	public BlockList blocksAllowAny = new BlockList();
 	public BlockList blocksAllowLeftclick = new BlockList();
 	public BlockList blocksAllowRightclick = new BlockList();
 	//private List<Pair<Item, Integer>> itemsAllowAny = new ArrayList<Pair<Item, Integer>>();
@@ -35,7 +36,7 @@ public class Config {
 		config.load();
 		fillBlockList(
 			config.getStringList("allowAnything", "blocks", new String[0], "Allow any interaction with these blocks."),
-			blocksAllowLeftclick, blocksAllowRightclick
+			blocksAllowAny, blocksAllowLeftclick, blocksAllowRightclick
 		);
 		fillBlockList(
 			config.getStringList("allowLeftclick", "blocks", new String[0], "Allow left clicking these blocks."),
@@ -51,10 +52,13 @@ public class Config {
 		);
 	}
 
-	private String[] getUIDs(BlockList... lists) {
+	public String[] getUIDs(BlockList... lists) {
 		ArrayList<String> uids = new ArrayList<String>();
 		for(BlockList list : lists) {
 			for(Pair<Block, Integer> pair : list) {
+				if(blocksAllowAny.contains(pair)) {
+					continue;
+				}
 				GameRegistry.UniqueIdentifier uid = GameRegistry.findUniqueIdentifierFor(pair.getKey());
 				if(uid != null) {
 					String name = uid.toString();
@@ -69,7 +73,7 @@ public class Config {
 		return uids.toArray(new String[uids.size()]);
 	}
 
-	private String[] getUIDs(ItemList... lists) {
+	public String[] getUIDs(ItemList... lists) {
 		ArrayList<String> uids = new ArrayList<String>();
 		for(ItemList list : lists) {
 			for(Pair<Item, Integer> pair : list) {

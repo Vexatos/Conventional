@@ -17,9 +17,9 @@ import java.util.List;
 /**
  * @author Vexatos
  */
-public class CommandAddItem extends SubCommand {
+public class CommandRemoveItem extends SubCommand {
 
-	public CommandAddItem() {
+	public CommandRemoveItem() {
 		super("item");
 	}
 
@@ -37,18 +37,18 @@ public class CommandAddItem extends SubCommand {
 				throw new WrongUsageException("unable to find identifier for item: " + stack.getUnlocalizedName());
 			}
 			Pair<Item, Integer> pair = Pair.of(stack.getItem(), args.length >= 1 && args[0].equalsIgnoreCase("ignore") ? -1 : stack.getItemDamage());
-			if(list.contains(pair) || list.contains(Pair.of(stack.getItem(), -1))) {
-				throw new WrongUsageException("item is already in the whitelist.");
+			if(!list.contains(pair)) {
+				throw new WrongUsageException("item is not in the whitelist.");
 			}
-			list.add(pair);
-			sender.addChatMessage(new ChatComponentText(String.format("Item '%s' added!", uid.toString())));
+			list.remove(pair);
+			sender.addChatMessage(new ChatComponentText(String.format("Item '%s' removed!", uid.toString())));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/cv add item [ignore] - adds the item currently in your hand. 'ignore' makes it ignore metadata.";
+		return "/cv remove item [ignore] - Removes the item currently in your hand. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override

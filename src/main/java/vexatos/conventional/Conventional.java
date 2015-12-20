@@ -13,7 +13,6 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.world.WorldSettings.GameType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
@@ -23,7 +22,10 @@ import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddItem;
+import vexatos.conventional.command.CommandList;
 import vexatos.conventional.command.CommandReload;
+import vexatos.conventional.command.CommandRemoveBlock;
+import vexatos.conventional.command.CommandRemoveItem;
 import vexatos.conventional.command.ConventionalCommand;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
@@ -59,10 +61,15 @@ public class Conventional {
 	public void onServerStarting(FMLServerStartingEvent e) {
 		ConventionalCommand cmd = new ConventionalCommand();
 		cmd.addCommand(new CommandReload());
+		cmd.addCommand(new CommandList());
 		ConventionalCommand addCmd = new ConventionalCommand("add");
 		addCmd.addCommand(new CommandAddBlock());
 		addCmd.addCommand(new CommandAddItem());
 		cmd.addCommand(addCmd);
+		ConventionalCommand rmvCmd = new ConventionalCommand("remove");
+		rmvCmd.addCommand(new CommandRemoveBlock());
+		rmvCmd.addCommand(new CommandRemoveItem());
+		cmd.addCommand(rmvCmd);
 		e.registerServerCommand(cmd);
 	}
 
@@ -81,7 +88,8 @@ public class Conventional {
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreakSpeed(BreakSpeed event) {
 		if(isAdventureMode(event.entityPlayer) && !config.mayLeftclick(event.block, event.metadata)) {
-			event.setCanceled(true);
+			//event.setCanceled(true);
+			event.newSpeed = Float.MIN_VALUE;
 		}
 	}
 
@@ -99,9 +107,9 @@ public class Conventional {
 		}
 		if(isAdventureMode(event.entityPlayer)) {
 			if(event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
-				if(!config.mayLeftclick(event.world, event.x, event.y, event.z)) {
+				/*if(!config.mayLeftclick(event.world, event.x, event.y, event.z)) {
 					event.setCanceled(true);
-				}
+				}*/
 			} else if(event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
 				final boolean
 					validBlock = config.mayRightclick(event.world, event.x, event.y, event.z),
@@ -125,7 +133,15 @@ public class Conventional {
 
 	// checks for serverside and adventure mode
 	private boolean isAdventureMode(EntityPlayer player) {
-		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() == GameType.ADVENTURE;
+		/*if(player.worldObj.isRemote) {
+			return isAdventureMode_Client(player);
+		}*/
+		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
+		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isSurvivalOrAdventure() && !player.canCommandSenderUseCommand(2, "cv");
 	}
+
+	/*private boolean isAdventureMode_Client(EntityPlayer player) {
+		return Minecraft.getMinecraft().playerController.isNotCreative() && !player.canCommandSenderUseCommand(2, "cv");
+	}*/
 
 }

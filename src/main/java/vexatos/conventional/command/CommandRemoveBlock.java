@@ -19,9 +19,9 @@ import java.util.List;
 /**
  * @author Vexatos
  */
-public class CommandAddBlock extends SubCommand {
+public class CommandRemoveBlock extends SubCommand {
 
-	public CommandAddBlock() {
+	public CommandRemoveBlock() {
 		super("block");
 	}
 
@@ -47,18 +47,18 @@ public class CommandAddBlock extends SubCommand {
 				throw new WrongUsageException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
 			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : player.worldObj.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ));
-			if(list.contains(pair) || list.contains(Pair.of(block, -1))) {
-				throw new WrongUsageException("block is already in the whitelist.");
+			if(!list.contains(pair)) {
+				throw new WrongUsageException("Block is not in the whitelist.");
 			}
-			list.add(pair);
-			sender.addChatMessage(new ChatComponentText(String.format("Block '%s' added!", uid.toString())));
+			list.remove(pair);
+			sender.addChatMessage(new ChatComponentText(String.format("Block '%s' removed!", uid.toString())));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/cv add block <left|right> [ignore] - adds the block you are currently looking at. 'ignore' makes it ignore metadata.";
+		return "/cv remove block <left|right> [ignore] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override
