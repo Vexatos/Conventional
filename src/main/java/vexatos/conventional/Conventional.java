@@ -13,6 +13,7 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldSettings.GameType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
@@ -137,7 +138,7 @@ public class Conventional {
 			return isAdventureMode_Client(player);
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
-		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isSurvivalOrAdventure() && !player.canCommandSenderUseCommand(2, "cv");
+		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE && !player.canCommandSenderUseCommand(2, "cv");
 	}
 
 	/*private boolean isAdventureMode_Client(EntityPlayer player) {
