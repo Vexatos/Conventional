@@ -3,6 +3,7 @@ package vexatos.conventional.reference;
 import com.google.common.base.Strings;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * @author Vexatos
@@ -24,6 +26,9 @@ public class Config {
 	public BlockList blocksAllowRightclick = new BlockList();
 	//private List<Pair<Item, Integer>> itemsAllowAny = new ArrayList<Pair<Item, Integer>>();
 	public ItemList itemsAllowRightclick = new ItemList();
+
+	public EntityList entitiesAllowRightclick = new EntityList();
+	public EntityList entitiesAllowLeftclick = new EntityList();
 
 	public Config(Configuration configuration) {
 		config = configuration;
@@ -49,6 +54,16 @@ public class Config {
 		fillItemList(
 			config.getStringList("allowRightclick", "items", new String[0], "Allow right clicking these items."),
 			itemsAllowRightclick
+		);
+		entitiesAllowRightclick.clear();
+		entitiesAllowLeftclick.clear();
+		fillEntityList(
+			config.getStringList("allowLeftclick", "entities", new String[0], "Allow left clicking these entities."),
+			entitiesAllowLeftclick
+		);
+		fillEntityList(
+			config.getStringList("allowRightclick", "entities", new String[0], "Allow right clicking these entities."),
+			entitiesAllowRightclick
 		);
 	}
 
@@ -116,6 +131,12 @@ public class Config {
 		}
 	}
 
+	private void fillEntityList(String[] entityList, EntityList... toFill) {
+		for(EntityList list : toFill) {
+			Collections.addAll(list, entityList);
+		}
+	}
+
 	private Entry getEntry(String data) {
 		final int splitIndex = data.lastIndexOf('@');
 		String name, optMeta, modid;
@@ -142,6 +163,9 @@ public class Config {
 		config.get("blocks", "allowLeftclick", new String[0], "Allow left clicking these blocks.").setValues(getUIDs(blocksAllowLeftclick));
 		config.get("blocks", "allowRightclick", new String[0], "Allow right clicking these blocks.").setValues(getUIDs(blocksAllowRightclick));
 		config.get("items", "allowRightclick", new String[0], "Allow right clicking these items.").setValues(getUIDs(itemsAllowRightclick));
+
+		config.get("entities", "allowLeftclick", new String[0], "Allow left clicking these entities.").setValues(entitiesAllowLeftclick.toArray(new String[entitiesAllowLeftclick.size()]));
+		config.get("entities", "allowRightclick", new String[0], "Allow right clicking these entities.").setValues(entitiesAllowRightclick.toArray(new String[entitiesAllowRightclick.size()]));
 		config.save();
 	}
 
@@ -160,6 +184,10 @@ public class Config {
 
 	public boolean mayLeftclick(World world, int x, int y, int z) {
 		return mayLeftclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z));
+	}
+
+	public boolean mayLeftclick(Entity entity) {
+		return entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
 	}
 
 	public boolean mayRightclick(Block block, int meta) {
@@ -191,6 +219,10 @@ public class Config {
 		return mayRightclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z));
 	}
 
+	public boolean mayRightclick(Entity entity) {
+		return entitiesAllowRightclick.contains(entity.getClass().getCanonicalName());
+	}
+
 	private static class Entry {
 
 		public final String name;
@@ -204,11 +236,15 @@ public class Config {
 		}
 	}
 
-	public class BlockList extends ArrayList<Pair<Block, Integer>> {
+	public static class BlockList extends ArrayList<Pair<Block, Integer>> {
 
 	}
 
-	public class ItemList extends ArrayList<Pair<Item, Integer>> {
+	public static class ItemList extends ArrayList<Pair<Item, Integer>> {
+
+	}
+
+	public static class EntityList extends ArrayList<String> {
 
 	}
 }
