@@ -65,7 +65,7 @@ public class Conventional {
 
 	@EventHandler
 	public void onServerStarting(FMLServerStartingEvent e) {
-		ConventionalCommand cmd = new ConventionalCommand();
+		ConventionalCommand cmd = new ConventionalCommand("cv");
 		cmd.addCommand(new CommandReload());
 		cmd.addCommand(new CommandList());
 		ConventionalCommand addCmd = new ConventionalCommand("add");

@@ -20,10 +20,6 @@ public class ConventionalCommand extends SubCommand {
 		super(name);
 	}
 
-	public ConventionalCommand() {
-		super("cv");
-	}
-
 	public void addCommand(SubCommand cmd) {
 		commands.add(cmd);
 	}
