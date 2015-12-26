@@ -145,7 +145,7 @@ public class Conventional {
 			return isAdventureMode_Client(player);
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
-		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE /*&& !player.canCommandSenderUseCommand(2, "cv")*/;
+		return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE && !player.canCommandSenderUseCommand(2, "cv");
 	}
 
 	/*private boolean isAdventureMode_Client(EntityPlayer player) {
