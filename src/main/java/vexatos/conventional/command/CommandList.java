@@ -9,6 +9,7 @@ import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,6 +46,7 @@ public class CommandList extends SubCommand {
 			uids = Conventional.config.getUIDs(list);
 		}
 		sender.addChatMessage(new ChatComponentText("Entries in the list:"));
+		Arrays.sort(uids, String.CASE_INSENSITIVE_ORDER);
 		ArrayList<String> line = new ArrayList<String>(5);
 		for(String uid : uids) {
 			line.add(uid);
