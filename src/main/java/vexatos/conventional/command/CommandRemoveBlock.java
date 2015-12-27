@@ -30,10 +30,12 @@ public class CommandRemoveBlock extends SubCommand {
 		if(!(sender instanceof EntityPlayerMP)) {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
-		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left"))) {
+		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left") && !args[1].equalsIgnoreCase("break"))) {
 			throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
 		}
-		Config.BlockList list = args[0].equalsIgnoreCase("right") ? Conventional.config.blocksAllowRightclick : Conventional.config.blocksAllowLeftclick;
+		Config.BlockList list = args[1].equalsIgnoreCase("right") ?
+			Conventional.config.blocksAllowRightclick : args[1].equalsIgnoreCase("left") ?
+			Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		RayTracer.instance().fire(player, 10);
 		MovingObjectPosition mop = RayTracer.instance().getTarget();
@@ -58,7 +60,7 @@ public class CommandRemoveBlock extends SubCommand {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/cv remove block <left|right> [ignore] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
+		return "/cv remove block <left|right|break> [ignore] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override

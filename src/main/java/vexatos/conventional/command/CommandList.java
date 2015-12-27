@@ -25,7 +25,7 @@ public class CommandList extends SubCommand {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/cv list block <left|right> - returns all entries in the specified list\n"
+		return "/cv list block <left|right|break> - returns all entries in the specified list\n"
 			+ "/cv list item - Same, just for the item list.";
 	}
 
@@ -36,10 +36,12 @@ public class CommandList extends SubCommand {
 		}
 		String[] uids;
 		if(args[0].equalsIgnoreCase("block")) {
-			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left"))) {
-				throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
+			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left") && !args[1].equalsIgnoreCase("break"))) {
+				throw new WrongUsageException("third argument needs to be 'left' or 'right' or 'break'.");
 			}
-			Config.BlockList list = args[1].equalsIgnoreCase("right") ? Conventional.config.blocksAllowRightclick : Conventional.config.blocksAllowLeftclick;
+			Config.BlockList list = args[1].equalsIgnoreCase("right") ?
+				Conventional.config.blocksAllowRightclick : args[1].equalsIgnoreCase("left") ?
+				Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
 			uids = Conventional.config.getUIDs(list);
 		} else {
 			Config.ItemList list = Conventional.config.itemsAllowRightclick;

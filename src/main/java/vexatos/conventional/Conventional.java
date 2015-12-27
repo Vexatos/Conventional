@@ -96,7 +96,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreakSpeed(BreakSpeed event) {
-		if(isAdventureMode(event.entityPlayer) && !config.mayLeftclick(event.block, event.metadata)) {
+		if(isAdventureMode(event.entityPlayer) && !config.mayBreak(event.entityPlayer.worldObj, event.x, event.y, event.z)) {
 			//event.setCanceled(true);
 			event.newSpeed = Float.MIN_VALUE;
 		}
@@ -104,7 +104,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreak(BreakEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayLeftclick(event.block, event.blockMetadata)) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.world, event.x, event.y, event.z)) {
 			event.setCanceled(true);
 		}
 	}
@@ -116,9 +116,9 @@ public class Conventional {
 		}
 		if(isAdventureMode(event.entityPlayer)) {
 			if(event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
-				/*if(!config.mayLeftclick(event.world, event.x, event.y, event.z)) {
+				if(!config.mayLeftclick(event.world, event.x, event.y, event.z)) {
 					event.setCanceled(true);
-				}*/
+				}
 			} else if(event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
 				final boolean
 					validBlock = config.mayRightclick(event.world, event.x, event.y, event.z),

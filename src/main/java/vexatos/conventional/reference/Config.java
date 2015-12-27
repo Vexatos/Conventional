@@ -6,8 +6,11 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.world.World;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 
@@ -23,6 +26,7 @@ public class Config {
 	//private List<Pair<Block, Integer>> blocksAllowAny = new ArrayList<Pair<Block, Integer>>();
 	public BlockList blocksAllowAny = new BlockList();
 	public BlockList blocksAllowLeftclick = new BlockList();
+	public BlockList blocksAllowBreak = new BlockList();
 	public BlockList blocksAllowRightclick = new BlockList();
 	//private List<Pair<Item, Integer>> itemsAllowAny = new ArrayList<Pair<Item, Integer>>();
 	public ItemList itemsAllowRightclick = new ItemList();
@@ -35,28 +39,36 @@ public class Config {
 	}
 
 	public void reload() {
+		blocksAllowAny.clear();
 		blocksAllowLeftclick.clear();
+		blocksAllowBreak.clear();
 		blocksAllowRightclick.clear();
 		itemsAllowRightclick.clear();
+		entitiesAllowRightclick.clear();
+		entitiesAllowLeftclick.clear();
 		config.load();
 		fillBlockList(
 			config.getStringList("allowAnything", "blocks", new String[0], "Allow any interaction with these blocks."),
-			blocksAllowAny, blocksAllowLeftclick, blocksAllowRightclick
+			blocksAllowAny, blocksAllowLeftclick, blocksAllowRightclick, blocksAllowBreak
 		);
 		fillBlockList(
 			config.getStringList("allowLeftclick", "blocks", new String[0], "Allow left clicking these blocks."),
 			blocksAllowLeftclick
 		);
 		fillBlockList(
+			config.getStringList("allowBreak", "blocks", new String[0], "Allow breaking these blocks."),
+			blocksAllowBreak
+		);
+		fillBlockList(
 			config.getStringList("allowRightclick", "blocks", new String[0], "Allow right clicking these blocks."),
 			blocksAllowRightclick
 		);
+
 		fillItemList(
 			config.getStringList("allowRightclick", "items", new String[0], "Allow right clicking these items."),
 			itemsAllowRightclick
 		);
-		entitiesAllowRightclick.clear();
-		entitiesAllowLeftclick.clear();
+
 		fillEntityList(
 			config.getStringList("allowLeftclick", "entities", new String[0], "Allow left clicking these entities."),
 			entitiesAllowLeftclick
@@ -161,6 +173,7 @@ public class Config {
 
 	public void save() {
 		config.get("blocks", "allowLeftclick", new String[0], "Allow left clicking these blocks.").setValues(getUIDs(blocksAllowLeftclick));
+		config.get("blocks", "allowBreak", new String[0], "Allow breaking these blocks.").setValues(getUIDs(blocksAllowBreak));
 		config.get("blocks", "allowRightclick", new String[0], "Allow right clicking these blocks.").setValues(getUIDs(blocksAllowRightclick));
 		config.get("items", "allowRightclick", new String[0], "Allow right clicking these items.").setValues(getUIDs(itemsAllowRightclick));
 
@@ -169,7 +182,7 @@ public class Config {
 		config.save();
 	}
 
-	public boolean mayLeftclick(Block block, int meta) {
+	private boolean mayLeftclick(Block block, int meta) {
 		if(block == null) {
 			return true;
 		}
@@ -183,14 +196,57 @@ public class Config {
 	}
 
 	public boolean mayLeftclick(World world, int x, int y, int z) {
-		return mayLeftclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z));
+		if(mayLeftclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+			return true;
+		}
+		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+			if(tile instanceof TileEntitySign) {
+				for(String s : ((TileEntitySign) tile).signText) {
+					if("[public left]".equalsIgnoreCase(s)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	public boolean mayLeftclick(Entity entity) {
 		return entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
 	}
 
-	public boolean mayRightclick(Block block, int meta) {
+	private boolean mayBreak(Block block, int meta) {
+		if(block == null) {
+			return true;
+		}
+		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
+		for(Pair<Block, Integer> pair : blocksAllowBreak) {
+			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == meta)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean mayBreak(World world, int x, int y, int z) {
+		if(mayBreak(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+			return true;
+		}
+		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+			if(tile instanceof TileEntitySign) {
+				for(String s : ((TileEntitySign) tile).signText) {
+					if("[public break]".equalsIgnoreCase(s)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean mayRightclick(Block block, int meta) {
 		if(block == null) {
 			return true;
 		}
@@ -216,7 +272,20 @@ public class Config {
 	}
 
 	public boolean mayRightclick(World world, int x, int y, int z) {
-		return mayRightclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z));
+		if(mayRightclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+			return true;
+		}
+		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+			if(tile instanceof TileEntitySign) {
+				for(String s : ((TileEntitySign) tile).signText) {
+					if("[public right]".equalsIgnoreCase(s)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	public boolean mayRightclick(Entity entity) {
