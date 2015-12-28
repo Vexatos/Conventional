@@ -40,7 +40,7 @@ public class CommandRemoveEntity extends SubCommand {
 		RayTracer.instance().fire(player, 10);
 		MovingObjectPosition mop = RayTracer.instance().getTarget();
 		if(mop.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY || mop.entityHit == null) {
-			throw new WrongUsageException("the player is not looking at any block");
+			throw new WrongUsageException("the player is not looking at any entity");
 		}
 		Entity entity = mop.entityHit;
 		if(!entity.isDead) {

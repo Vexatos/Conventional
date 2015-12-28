@@ -84,7 +84,7 @@ public class RayTracer {
 		ArrayList<Entity> entityList = new ArrayList<Entity>();
 		List entityObjects = base.worldObj.getEntitiesWithinAABB(Entity.class, searchBox);
 		for(Object o : entityObjects) {
-			if(o instanceof Entity && o != base && ((Entity) o).canBeCollidedWith()) {
+			if(o instanceof Entity && o != base /*&& ((Entity) o).canBeCollidedWith()*/) {
 				entityList.add(((Entity) o));
 			}
 		}
