@@ -31,8 +31,8 @@ public class CommandList extends SubCommand {
 
 	@Override
 	public void processCommand(ICommandSender sender, String[] args) {
-		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item"))) {
-			throw new WrongUsageException("second argument needs to be 'block' or 'item'.");
+		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item") && !args[0].equalsIgnoreCase("entity"))) {
+			throw new WrongUsageException("second argument needs to be 'block' or 'item' or 'entity'.");
 		}
 		String[] uids;
 		if(args[0].equalsIgnoreCase("block")) {
@@ -43,6 +43,14 @@ public class CommandList extends SubCommand {
 				Conventional.config.blocksAllowRightclick : args[1].equalsIgnoreCase("left") ?
 				Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
 			uids = Conventional.config.getUIDs(list);
+		} else if(args[0].equalsIgnoreCase("entity")) {
+			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left"))) {
+				throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
+			}
+			Config.EntityList list = args[1].equalsIgnoreCase("right") ?
+				Conventional.config.entitiesAllowRightclick :
+				Conventional.config.entitiesAllowLeftclick;
+			uids = list.toArray(new String[list.size()]);
 		} else {
 			Config.ItemList list = Conventional.config.itemsAllowRightclick;
 			uids = Conventional.config.getUIDs(list);
@@ -65,9 +73,13 @@ public class CommandList extends SubCommand {
 	@Override
 	public List addTabCompletionOptions(ICommandSender sender, String[] args) {
 		if(args.length <= 1) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "block", "item");
-		} else if(args.length == 2 && "block".equalsIgnoreCase(args[0])) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
+			return CommandBase.getListOfStringsMatchingLastWord(args, "block", "item", "entity");
+		} else if(args.length == 2) {
+			if("block".equalsIgnoreCase(args[0])) {
+				return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right", "break");
+			} else if("entity".equalsIgnoreCase(args[0])) {
+				return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
+			}
 		}
 		return super.addTabCompletionOptions(sender, args);
 	}
