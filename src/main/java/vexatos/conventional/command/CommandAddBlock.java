@@ -30,7 +30,7 @@ public class CommandAddBlock extends SubCommand {
 		if(!(sender instanceof EntityPlayerMP)) {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
-		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left") && !args[1].equalsIgnoreCase("break"))) {
+		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left") && !args[0].equalsIgnoreCase("break"))) {
 			throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
 		}
 		Config.BlockList list = args[0].equalsIgnoreCase("right") ?
