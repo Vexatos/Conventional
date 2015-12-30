@@ -31,7 +31,7 @@ public class CommandRemoveBlock extends SubCommand {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left") && !args[0].equalsIgnoreCase("break"))) {
-			throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
+			throw new WrongUsageException("third argument needs to be 'left' or 'right' or 'break'.");
 		}
 		Config.BlockList list = args[0].equalsIgnoreCase("right") ?
 			Conventional.config.blocksAllowRightclick : args[0].equalsIgnoreCase("left") ?
@@ -66,7 +66,7 @@ public class CommandRemoveBlock extends SubCommand {
 	@Override
 	public List addTabCompletionOptions(ICommandSender sender, String[] args) {
 		if(args.length <= 1) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
+			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right", "break");
 		} else if(args.length == 2) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "ignore");
 		}
