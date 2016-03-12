@@ -1,11 +1,13 @@
 package vexatos.conventional.command;
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
@@ -26,7 +28,7 @@ public class CommandAddBlock extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) {
+	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 		if(!(sender instanceof EntityPlayerMP)) {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
@@ -42,18 +44,19 @@ public class CommandAddBlock extends SubCommand {
 		if(mop.typeOfHit != MovingObjectType.BLOCK) {
 			throw new WrongUsageException("the player is not looking at any block");
 		}
-		Block block = player.worldObj.getBlock(mop.blockX, mop.blockY, mop.blockZ);
-		if(!block.isAir(player.worldObj, mop.blockX, mop.blockY, mop.blockZ)) {
-			GameRegistry.UniqueIdentifier uid = GameRegistry.findUniqueIdentifierFor(block);
+		IBlockState state = player.worldObj.getBlockState(mop.getBlockPos());
+		Block block = state.getBlock();
+		if(!block.isAir(player.worldObj, mop.getBlockPos())) {
+			String uid = block.getRegistryName();
 			if(uid == null) {
 				throw new WrongUsageException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
-			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : player.worldObj.getBlockMetadata(mop.blockX, mop.blockY, mop.blockZ));
+			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : block.getMetaFromState(state));
 			if(list.contains(pair) || list.contains(Pair.of(block, -1))) {
 				throw new WrongUsageException("block is already in the whitelist.");
 			}
 			list.add(pair);
-			sender.addChatMessage(new ChatComponentText(String.format("Block '%s' added!", uid.toString())));
+			sender.addChatMessage(new ChatComponentText(String.format("Block '%s' added!", uid)));
 			Conventional.config.save();
 		}
 	}
@@ -64,12 +67,12 @@ public class CommandAddBlock extends SubCommand {
 	}
 
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] args) {
+	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right", "break");
 		} else if(args.length == 2) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "ignore");
 		}
-		return super.addTabCompletionOptions(sender, args);
+		return super.addTabCompletionOptions(sender, args, pos);
 	}
 }

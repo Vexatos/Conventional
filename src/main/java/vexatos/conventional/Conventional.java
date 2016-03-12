@@ -1,16 +1,5 @@
 package vexatos.conventional;
 
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.common.event.FMLServerStoppingEvent;
-import cpw.mods.fml.common.eventhandler.Event.Result;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldSettings.GameType;
@@ -23,6 +12,17 @@ import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
+import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
@@ -96,7 +96,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreakSpeed(BreakSpeed event) {
-		if(isAdventureMode(event.entityPlayer) && !config.mayBreak(event.entityPlayer.worldObj, event.x, event.y, event.z)) {
+		if(isAdventureMode(event.entityPlayer) && !config.mayBreak(event.entityPlayer.worldObj, event.pos)) {
 			//event.setCanceled(true);
 			event.newSpeed = Float.MIN_VALUE;
 		}
@@ -104,7 +104,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreak(BreakEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.world, event.x, event.y, event.z)) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.world, event.pos)) {
 			event.setCanceled(true);
 		}
 	}
@@ -116,12 +116,12 @@ public class Conventional {
 		}
 		if(isAdventureMode(event.entityPlayer)) {
 			if(event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
-				if(!config.mayLeftclick(event.world, event.x, event.y, event.z)) {
+				if(!config.mayLeftclick(event.world, event.pos)) {
 					event.setCanceled(true);
 				}
 			} else if(event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
 				final boolean
-					validBlock = config.mayRightclick(event.world, event.x, event.y, event.z),
+					validBlock = config.mayRightclick(event.world, event.pos),
 					validItem = config.mayRightclick(event.entityPlayer.getHeldItem());
 				if(validBlock && validItem) {
 					// Just return.
@@ -146,7 +146,7 @@ public class Conventional {
 			return isAdventureMode_Client(player);
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
-		return !(player instanceof FakePlayer) && !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE && !player.canCommandSenderUseCommand(2, "cv");
+		return !(player instanceof FakePlayer) && !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE /* && !player.canCommandSenderUseCommand(2, "cv")*/;
 	}
 
 	/*private boolean isAdventureMode_Client(EntityPlayer player) {

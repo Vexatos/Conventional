@@ -1,10 +1,12 @@
 package vexatos.conventional.command;
 
 import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MovingObjectPosition;
 import vexatos.conventional.Conventional;
@@ -28,7 +30,7 @@ public class CommandRemoveEntity extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) {
+	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 		if(!(sender instanceof EntityPlayerMP)) {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
@@ -55,10 +57,10 @@ public class CommandRemoveEntity extends SubCommand {
 	}
 
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] args) {
+	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
 		}
-		return super.addTabCompletionOptions(sender, args);
+		return super.addTabCompletionOptions(sender, args, pos);
 	}
 }

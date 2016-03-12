@@ -2,8 +2,10 @@ package vexatos.conventional.command;
 
 import com.google.common.base.Joiner;
 import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
@@ -30,7 +32,7 @@ public class CommandList extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) {
+	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item") && !args[0].equalsIgnoreCase("entity"))) {
 			throw new WrongUsageException("second argument needs to be 'block' or 'item' or 'entity'.");
 		}
@@ -71,7 +73,7 @@ public class CommandList extends SubCommand {
 	}
 
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] args) {
+	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "block", "item", "entity");
 		} else if(args.length == 2) {
@@ -81,6 +83,6 @@ public class CommandList extends SubCommand {
 				return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
 			}
 		}
-		return super.addTabCompletionOptions(sender, args);
+		return super.addTabCompletionOptions(sender, args, pos);
 	}
 }

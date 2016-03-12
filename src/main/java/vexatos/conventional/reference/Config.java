@@ -1,16 +1,19 @@
 package vexatos.conventional.reference;
 
 import com.google.common.base.Strings;
-import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntitySign;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 
@@ -86,11 +89,10 @@ public class Config {
 				if(blocksAllowAny.contains(pair)) {
 					continue;
 				}
-				GameRegistry.UniqueIdentifier uid = GameRegistry.findUniqueIdentifierFor(pair.getKey());
+				String uid = pair.getKey().getRegistryName();
 				if(uid != null) {
-					String name = uid.toString();
-					String s = name + (pair.getValue() != -1 ? ("@" + pair.getValue()) : "");
-					if(uids.contains(s) || uids.contains(name)) {
+					String s = uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : "");
+					if(uids.contains(s) || uids.contains(uid)) {
 						continue;
 					}
 					uids.add(s);
@@ -104,9 +106,9 @@ public class Config {
 		ArrayList<String> uids = new ArrayList<String>();
 		for(ItemList list : lists) {
 			for(Pair<Item, Integer> pair : list) {
-				GameRegistry.UniqueIdentifier uid = GameRegistry.findUniqueIdentifierFor(pair.getKey());
+				String uid = pair.getKey().getRegistryName();
 				if(uid != null) {
-					uids.add(uid.toString() + (pair.getValue() != -1 ? ("@" + pair.getValue()) : ""));
+					uids.add(uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : ""));
 				}
 			}
 		}
@@ -182,28 +184,32 @@ public class Config {
 		config.save();
 	}
 
-	private boolean mayLeftclick(Block block, int meta) {
-		if(block == null) {
+	private boolean mayLeftclick(IBlockState state) {
+		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
+		final Block block = state.getBlock();
+		if(block == null) {
+			return true;
+		}
 		for(Pair<Block, Integer> pair : blocksAllowLeftclick) {
-			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == meta)) {
+			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public boolean mayLeftclick(World world, int x, int y, int z) {
-		if(mayLeftclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+	public boolean mayLeftclick(World world, BlockPos pos) {
+		if(mayLeftclick(world.getBlockState(pos))) {
 			return true;
 		}
-		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+		for(EnumFacing dir : EnumFacing.VALUES) {
+			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(String s : ((TileEntitySign) tile).signText) {
-					if("[public left]".equalsIgnoreCase(s)) {
+				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+					if("[public left]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}
 				}
@@ -216,28 +222,32 @@ public class Config {
 		return entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
 	}
 
-	private boolean mayBreak(Block block, int meta) {
-		if(block == null) {
+	private boolean mayBreak(IBlockState state) {
+		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
+		final Block block = state.getBlock();
+		if(block == null) {
+			return true;
+		}
 		for(Pair<Block, Integer> pair : blocksAllowBreak) {
-			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == meta)) {
+			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public boolean mayBreak(World world, int x, int y, int z) {
-		if(mayBreak(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+	public boolean mayBreak(World world, BlockPos pos) {
+		if(mayBreak(world.getBlockState(pos))) {
 			return true;
 		}
-		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+		for(EnumFacing dir : EnumFacing.VALUES) {
+			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(String s : ((TileEntitySign) tile).signText) {
-					if("[public break]".equalsIgnoreCase(s)) {
+				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+					if("[public break]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}
 				}
@@ -246,13 +256,17 @@ public class Config {
 		return false;
 	}
 
-	private boolean mayRightclick(Block block, int meta) {
-		if(block == null) {
+	private boolean mayRightclick(IBlockState state) {
+		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
+		final Block block = state.getBlock();
+		if(block == null) {
+			return true;
+		}
 		for(Pair<Block, Integer> pair : blocksAllowRightclick) {
-			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == meta)) {
+			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
 			}
 		}
@@ -271,15 +285,15 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayRightclick(World world, int x, int y, int z) {
-		if(mayRightclick(world.getBlock(x, y, z), world.getBlockMetadata(x, y, z))) {
+	public boolean mayRightclick(World world, BlockPos pos) {
+		if(mayRightclick(world.getBlockState(pos))) {
 			return true;
 		}
-		for(ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
-			TileEntity tile = world.getTileEntity(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ);
+		for(EnumFacing dir : EnumFacing.VALUES) {
+			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(String s : ((TileEntitySign) tile).signText) {
-					if("[public right]".equalsIgnoreCase(s)) {
+				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+					if("[public right]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}
 				}
