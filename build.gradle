@@ -53,26 +53,28 @@ minecraft {
 	replace "@VERSION@", "${config.conventional.version}"
 }
 
-sourceSets {
+/*sourceSets {
 	main {
-		output.resourcesDir = 'build/classes/main'
+		//output.resourcesDir = 'build/classes/main'
 	}
-}
+}*/
 
 jar {
 	exclude 'cofh/**'
 }
 
-apply plugin: 'idea'
+//apply plugin: 'idea'
 idea {
 	module {
-		scopes.PROVIDED.plus += [configurations.provided]
+		//scopes.PROVIDED.plus += [configurations.provided]
 		outputDir = file('build/classes/main')
 	}
 }
 
 processResources
 	{
+		inputs.property "version", project.version
+		inputs.property "mcversion", project.minecraft.version
 		// replace stuff in mcmod.info, nothing else
 		from(sourceSets.main.resources.srcDirs) {
 			include 'mcmod.info'
