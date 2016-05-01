@@ -4,8 +4,9 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import vexatos.conventional.util.StringUtil;
 
 import java.util.ArrayList;
@@ -36,20 +37,20 @@ public class ConventionalCommand extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(args.length < 1) {
 			throw new WrongUsageException(getCommandUsage(sender));
 		}
 		if(args[0].equalsIgnoreCase("help")) {
 			String[] usage = getUsage(sender).split("\n");
 			for(String s : usage) {
-				sender.addChatMessage(new ChatComponentText(" - " + s));
+				sender.addChatMessage(new TextComponentString(" - " + s));
 			}
 			return;
 		}
 		for(SubCommand cmd : commands) {
 			if(cmd.getCommandName().equalsIgnoreCase(args[0])) {
-				cmd.processCommand(sender, StringUtil.dropArgs(args, 1));
+				cmd.execute(server, sender, StringUtil.dropArgs(args, 1));
 				return;
 			}
 		}
@@ -57,7 +58,7 @@ public class ConventionalCommand extends SubCommand {
 	}
 
 	@Override
-	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			List<String> words = new ArrayList<String>();
 			for(SubCommand cmd : commands) {
@@ -68,10 +69,10 @@ public class ConventionalCommand extends SubCommand {
 			String cmdname = args[0];
 			for(SubCommand cmd : commands) {
 				if(cmd.getCommandName().equalsIgnoreCase(cmdname)) {
-					return cmd.addTabCompletionOptions(sender, StringUtil.dropArgs(args, 1), pos);
+					return cmd.getTabCompletionOptions(server, sender, StringUtil.dropArgs(args, 1), pos);
 				}
 			}
 		}
-		return super.addTabCompletionOptions(sender, args, pos);
+		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
 }

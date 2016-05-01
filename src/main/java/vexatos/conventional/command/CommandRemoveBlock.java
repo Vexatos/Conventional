@@ -7,14 +7,15 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextComponentString;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.util.RayTracer;
+import vexatos.conventional.util.RegistryUtil;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class CommandRemoveBlock extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(!(sender instanceof EntityPlayerMP)) {
 			throw new WrongUsageException("cannot process unless called from a player on the server side");
 		}
@@ -40,14 +41,14 @@ public class CommandRemoveBlock extends SubCommand {
 			Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		RayTracer.instance().fire(player, 10);
-		MovingObjectPosition mop = RayTracer.instance().getTarget();
-		if(mop.typeOfHit != MovingObjectType.BLOCK) {
+		RayTraceResult result = RayTracer.instance().getTarget();
+		if(result.typeOfHit != RayTraceResult.Type.BLOCK) {
 			throw new WrongUsageException("the player is not looking at any block");
 		}
-		IBlockState state = player.worldObj.getBlockState(mop.getBlockPos());
+		IBlockState state = player.worldObj.getBlockState(result.getBlockPos());
 		Block block = state.getBlock();
-		if(!block.isAir(player.worldObj, mop.getBlockPos())) {
-			String uid = block.getRegistryName();
+		if(!block.isAir(state, player.worldObj, result.getBlockPos())) {
+			final String uid = RegistryUtil.getRegistryName(block);
 			if(uid == null) {
 				throw new WrongUsageException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
@@ -56,7 +57,7 @@ public class CommandRemoveBlock extends SubCommand {
 				throw new WrongUsageException("Block is not in the whitelist.");
 			}
 			list.remove(pair);
-			sender.addChatMessage(new ChatComponentText(String.format("Block '%s' removed!", uid)));
+			sender.addChatMessage(new TextComponentString(String.format("Block '%s' removed!", uid)));
 			Conventional.config.save();
 		}
 	}
@@ -67,12 +68,12 @@ public class CommandRemoveBlock extends SubCommand {
 	}
 
 	@Override
-	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right", "break");
 		} else if(args.length == 2) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "ignore");
 		}
-		return super.addTabCompletionOptions(sender, args, pos);
+		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
 }

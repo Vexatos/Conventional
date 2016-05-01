@@ -2,7 +2,8 @@ package vexatos.conventional.command;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.TextComponentString;
 import vexatos.conventional.Conventional;
 
 /**
@@ -20,9 +21,9 @@ public class CommandReload extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		Conventional.config.reload();
 		Conventional.config.save();
-		sender.addChatMessage(new ChatComponentText("Whitelists reloaded!"));
+		sender.addChatMessage(new TextComponentString("Whitelists reloaded!"));
 	}
 }

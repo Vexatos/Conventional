@@ -8,14 +8,15 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntitySign;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
+import vexatos.conventional.util.RegistryUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,7 +90,7 @@ public class Config {
 				if(blocksAllowAny.contains(pair)) {
 					continue;
 				}
-				String uid = pair.getKey().getRegistryName();
+				final String uid = RegistryUtil.getRegistryName(pair.getKey());
 				if(uid != null) {
 					String s = uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : "");
 					if(uids.contains(s) || uids.contains(uid)) {
@@ -106,7 +107,7 @@ public class Config {
 		ArrayList<String> uids = new ArrayList<String>();
 		for(ItemList list : lists) {
 			for(Pair<Item, Integer> pair : list) {
-				String uid = pair.getKey().getRegistryName();
+				final String uid = RegistryUtil.getRegistryName(pair.getKey());
 				if(uid != null) {
 					uids.add(uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : ""));
 				}
@@ -118,7 +119,7 @@ public class Config {
 	private void fillBlockList(String[] blockList, BlockList... toFill) {
 		for(String data : blockList) {
 			Entry entry = getEntry(data);
-			Block block = GameRegistry.findBlock(entry.modid, entry.name);
+			Block block = Block.REGISTRY.getObject(new ResourceLocation(entry.modid, entry.name));
 			if(block != null) {
 				Pair<Block, Integer> pair = Pair.of(block, entry.meta);
 				for(BlockList list : toFill) {
@@ -133,7 +134,7 @@ public class Config {
 	private void fillItemList(String[] itemList, ItemList... toFill) {
 		for(String data : itemList) {
 			Entry entry = getEntry(data);
-			Item item = GameRegistry.findItem(entry.modid, entry.name);
+			Item item = Item.REGISTRY.getObject(new ResourceLocation(entry.modid, entry.name));
 			if(item != null) {
 				Pair<Item, Integer> pair = Pair.of(item, entry.meta);
 				for(ItemList list : toFill) {
@@ -208,7 +209,7 @@ public class Config {
 		for(EnumFacing dir : EnumFacing.VALUES) {
 			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+				for(ITextComponent s : ((TileEntitySign) tile).signText) {
 					if("[public left]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}
@@ -246,7 +247,7 @@ public class Config {
 		for(EnumFacing dir : EnumFacing.VALUES) {
 			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+				for(ITextComponent s : ((TileEntitySign) tile).signText) {
 					if("[public break]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}
@@ -292,7 +293,7 @@ public class Config {
 		for(EnumFacing dir : EnumFacing.VALUES) {
 			TileEntity tile = world.getTileEntity(pos.offset(dir));
 			if(tile instanceof TileEntitySign) {
-				for(IChatComponent s : ((TileEntitySign) tile).signText) {
+				for(ITextComponent s : ((TileEntitySign) tile).signText) {
 					if("[public right]".equalsIgnoreCase(s.getUnformattedText())) {
 						return true;
 					}

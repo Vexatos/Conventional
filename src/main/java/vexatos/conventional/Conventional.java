@@ -7,7 +7,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.EntityInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
@@ -89,22 +88,22 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onPlace(PlaceEvent event) {
-		if(isAdventureMode(event.player) && !config.mayRightclick(event.itemInHand)) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getItemInHand())) {
 			event.setCanceled(true);
 		}
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreakSpeed(BreakSpeed event) {
-		if(isAdventureMode(event.entityPlayer) && !config.mayBreak(event.entityPlayer.worldObj, event.pos)) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer().worldObj, event.getPos())) {
 			//event.setCanceled(true);
-			event.newSpeed = Float.MIN_VALUE;
+			event.setNewSpeed(Float.MIN_VALUE);
 		}
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBreak(BreakEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.world, event.pos)) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.getWorld(), event.getPos())) {
 			event.setCanceled(true);
 		}
 	}
@@ -114,27 +113,36 @@ public class Conventional {
 		if(event.isCanceled()) {
 			return;
 		}
-		if(isAdventureMode(event.entityPlayer)) {
-			if(event.action == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
-				if(!config.mayLeftclick(event.world, event.pos)) {
+		if(isAdventureMode(event.getEntityPlayer())) {
+			if(event instanceof PlayerInteractEvent.LeftClickBlock) {
+				if(!config.mayLeftclick(event.getWorld(), event.getPos())) {
 					event.setCanceled(true);
 				}
-			} else if(event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) {
+			} else if(event instanceof PlayerInteractEvent.RightClickBlock) {
+				final PlayerInteractEvent.RightClickBlock rcevent = (PlayerInteractEvent.RightClickBlock) event;
 				final boolean
-					validBlock = config.mayRightclick(event.world, event.pos),
-					validItem = config.mayRightclick(event.entityPlayer.getHeldItem());
+					validBlock = config.mayRightclick(rcevent.getWorld(), rcevent.getPos()),
+					validItem = config.mayRightclick(rcevent.getItemStack());
 				if(validBlock && validItem) {
 					// Just return.
 				} else if(!validBlock && !validItem) {
-					event.setCanceled(true);
+					rcevent.setCanceled(true);
 				} else if(validBlock) {
-					event.useBlock = Result.ALLOW;
-					event.useItem = Result.DENY;
+					rcevent.setUseBlock(Result.ALLOW);
+					rcevent.setUseItem(Result.DENY);
 				} else {
-					event.useBlock = Result.DENY;
-					event.useItem = Result.ALLOW;
+					rcevent.setUseBlock(Result.DENY);
+					rcevent.setUseItem(Result.ALLOW);
 				}
-			} else if(!config.mayRightclick(event.entityPlayer.getHeldItem())) {
+			} else if(event instanceof PlayerInteractEvent.EntityInteract) {
+				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteract) event).getTarget())) {
+					event.setCanceled(true);
+				}
+			} else if(event instanceof PlayerInteractEvent.EntityInteractSpecific) {
+				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteractSpecific) event).getTarget())) {
+					event.setCanceled(true);
+				}
+			} else if(!config.mayRightclick(event.getItemStack())) {
 				event.setCanceled(true);
 			}
 		}
@@ -146,7 +154,7 @@ public class Conventional {
 			return isAdventureMode_Client(player);
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
-		return !(player instanceof FakePlayer) && !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType() != GameType.CREATIVE /* && !player.canCommandSenderUseCommand(2, "cv")*/;
+		return !(player instanceof FakePlayer) && !player.worldObj.isRemote && ((EntityPlayerMP) player).interactionManager.getGameType() != GameType.CREATIVE /* && !player.canCommandSenderUseCommand(2, "cv")*/;
 	}
 
 	/*private boolean isAdventureMode_Client(EntityPlayer player) {
@@ -164,15 +172,8 @@ public class Conventional {
 	}*/
 
 	@SubscribeEvent
-	public void onEntityRightclick(EntityInteractEvent event) {
-		if(isAdventureMode(event.entityPlayer) && !config.mayRightclick(event.target)) {
-			event.setCanceled(true);
-		}
-	}
-
-	@SubscribeEvent
 	public void onEntityLeftclick(AttackEntityEvent event) {
-		if(isAdventureMode(event.entityPlayer) && !config.mayLeftclick(event.target)) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getTarget())) {
 			event.setCanceled(true);
 		}
 	}

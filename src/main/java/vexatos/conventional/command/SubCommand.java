@@ -3,7 +3,8 @@ package vexatos.conventional.command;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.BlockPos;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.List;
 
@@ -36,10 +37,10 @@ public abstract class SubCommand extends CommandBase {
 	public abstract String getUsage(ICommandSender sender);
 
 	@Override
-	public abstract void processCommand(ICommandSender sender, String[] args) throws CommandException;
+	public abstract void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException;
 
 	@Override
-	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
-		return super.addTabCompletionOptions(sender, args, pos);
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
+		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
 }

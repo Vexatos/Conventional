@@ -5,8 +5,9 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
 
@@ -32,7 +33,7 @@ public class CommandList extends SubCommand {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item") && !args[0].equalsIgnoreCase("entity"))) {
 			throw new WrongUsageException("second argument needs to be 'block' or 'item' or 'entity'.");
 		}
@@ -57,23 +58,23 @@ public class CommandList extends SubCommand {
 			Config.ItemList list = Conventional.config.itemsAllowRightclick;
 			uids = Conventional.config.getUIDs(list);
 		}
-		sender.addChatMessage(new ChatComponentText("Entries in the list:"));
+		sender.addChatMessage(new TextComponentString("Entries in the list:"));
 		Arrays.sort(uids, String.CASE_INSENSITIVE_ORDER);
 		ArrayList<String> line = new ArrayList<String>(5);
 		for(String uid : uids) {
 			line.add(uid);
 			if(line.size() >= 5) {
-				sender.addChatMessage(new ChatComponentText(joiner.join(line)));
+				sender.addChatMessage(new TextComponentString(joiner.join(line)));
 				line.clear();
 			}
 		}
 		if(!line.isEmpty()) {
-			sender.addChatMessage(new ChatComponentText(joiner.join(line)));
+			sender.addChatMessage(new TextComponentString(joiner.join(line)));
 		}
 	}
 
 	@Override
-	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "block", "item", "entity");
 		} else if(args.length == 2) {
@@ -83,6 +84,6 @@ public class CommandList extends SubCommand {
 				return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
 			}
 		}
-		return super.addTabCompletionOptions(sender, args, pos);
+		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
 }
