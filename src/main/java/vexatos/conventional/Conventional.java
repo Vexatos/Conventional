@@ -35,7 +35,7 @@ import vexatos.conventional.command.ConventionalCommand;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
 
-@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*")
+@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*", serverSideOnly = true)
 public class Conventional {
 
 	@Instance

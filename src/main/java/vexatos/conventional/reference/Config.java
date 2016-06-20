@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.util.RegistryUtil;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -185,15 +186,12 @@ public class Config {
 		config.save();
 	}
 
-	private boolean mayLeftclick(IBlockState state) {
+	private boolean mayLeftclick(@Nullable IBlockState state) {
 		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
 		final Block block = state.getBlock();
-		if(block == null) {
-			return true;
-		}
 		for(Pair<Block, Integer> pair : blocksAllowLeftclick) {
 			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
@@ -223,15 +221,12 @@ public class Config {
 		return entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
 	}
 
-	private boolean mayBreak(IBlockState state) {
+	private boolean mayBreak(@Nullable IBlockState state) {
 		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
 		final Block block = state.getBlock();
-		if(block == null) {
-			return true;
-		}
 		for(Pair<Block, Integer> pair : blocksAllowBreak) {
 			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
@@ -257,15 +252,12 @@ public class Config {
 		return false;
 	}
 
-	private boolean mayRightclick(IBlockState state) {
+	private boolean mayRightclick(@Nullable IBlockState state) {
 		if(state == null) {
 			return true;
 		}
 		//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
 		final Block block = state.getBlock();
-		if(block == null) {
-			return true;
-		}
 		for(Pair<Block, Integer> pair : blocksAllowRightclick) {
 			if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
 				return true;
@@ -274,8 +266,8 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayRightclick(ItemStack stack) {
-		if(stack == null || stack.getItem() == null) {
+	public boolean mayRightclick(@Nullable ItemStack stack) {
+		if(stack == null) {
 			return true;
 		}
 		for(Pair<Item, Integer> pair : itemsAllowRightclick) {

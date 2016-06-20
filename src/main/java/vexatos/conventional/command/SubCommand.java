@@ -6,6 +6,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -40,7 +41,7 @@ public abstract class SubCommand extends CommandBase {
 	public abstract void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException;
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
 }
