@@ -86,14 +86,14 @@ public class Conventional {
 		config.save();
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onPlace(PlaceEvent event) {
 		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getItemInHand())) {
 			event.setCanceled(true);
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBreakSpeed(BreakSpeed event) {
 		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer().worldObj, event.getPos())) {
 			//event.setCanceled(true);
@@ -101,14 +101,14 @@ public class Conventional {
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBreak(BreakEvent event) {
 		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.getWorld(), event.getPos())) {
 			event.setCanceled(true);
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onInteract(PlayerInteractEvent event) {
 		if(event.isCanceled()) {
 			return;
@@ -148,6 +148,13 @@ public class Conventional {
 		}
 	}
 
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onEntityLeftclick(AttackEntityEvent event) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getTarget())) {
+			event.setCanceled(true);
+		}
+	}
+
 	// checks for serverside and adventure mode
 	private boolean isAdventureMode(EntityPlayer player) {
 		/*if(player.worldObj.isRemote) {
@@ -170,11 +177,4 @@ public class Conventional {
 		if(s.contains("Attack") || s.contains("Interact"))
 			log.info(Thread.currentThread().getName() + ": " + e.toString());
 	}*/
-
-	@SubscribeEvent
-	public void onEntityLeftclick(AttackEntityEvent event) {
-		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getTarget())) {
-			event.setCanceled(true);
-		}
-	}
 }
