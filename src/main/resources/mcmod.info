@@ -2,7 +2,7 @@
 {
   "modid": "Conventional",
   "name": "Conventional",
-  "description": "Making Adventure mode a little more safe.",
+  "description": "Making Adventure (and survival) mode a little more safe.",
   "version": "${version}",
   "credits": "",
   "logoFile": "",

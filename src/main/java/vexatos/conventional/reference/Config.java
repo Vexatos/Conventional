@@ -268,7 +268,7 @@ public class Config {
 
 	public boolean mayRightclick(@Nullable ItemStack stack) {
 		if(stack == null) {
-			return true;
+			return false;
 		}
 		for(Pair<Item, Integer> pair : itemsAllowRightclick) {
 			if(pair.getKey().equals(stack.getItem()) && (pair.getValue() == -1 || pair.getValue() == stack.getItemDamage())) {

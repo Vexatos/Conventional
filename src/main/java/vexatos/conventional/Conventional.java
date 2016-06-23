@@ -32,10 +32,11 @@ import vexatos.conventional.command.CommandRemoveBlock;
 import vexatos.conventional.command.CommandRemoveEntity;
 import vexatos.conventional.command.CommandRemoveItem;
 import vexatos.conventional.command.ConventionalCommand;
+import vexatos.conventional.integration.chiselsandbits.ChiselsBitsHandler;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
 
-@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*", serverSideOnly = true)
+@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*")
 public class Conventional {
 
 	@Instance
@@ -48,6 +49,9 @@ public class Conventional {
 	public void preInit(FMLPreInitializationEvent e) {
 		log = e.getModLog();
 		MinecraftForge.EVENT_BUS.register(this);
+		if(Mods.isLoaded(Mods.ChiselsBits)) {
+			MinecraftForge.EVENT_BUS.register(new ChiselsBitsHandler());
+		}
 		//FMLCommonHandler.instance().bus().register(this);
 		config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		config.reload();
@@ -156,7 +160,7 @@ public class Conventional {
 	}
 
 	// checks for serverside and adventure mode
-	private boolean isAdventureMode(EntityPlayer player) {
+	public static boolean isAdventureMode(EntityPlayer player) {
 		/*if(player.worldObj.isRemote) {
 			return isAdventureMode_Client(player);
 		}*/
