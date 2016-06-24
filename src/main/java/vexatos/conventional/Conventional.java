@@ -36,7 +36,7 @@ import vexatos.conventional.integration.chiselsandbits.ChiselsBitsHandler;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
 
-@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*")
+@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*", dependencies = "after:" + Mods.ChiselsBits + "@[10.9,)")
 public class Conventional {
 
 	@Instance
