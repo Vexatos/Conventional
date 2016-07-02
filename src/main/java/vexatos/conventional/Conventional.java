@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
 import vexatos.conventional.command.CommandAddItem;
+import vexatos.conventional.command.CommandExclude;
 import vexatos.conventional.command.CommandList;
 import vexatos.conventional.command.CommandReload;
 import vexatos.conventional.command.CommandRemoveBlock;
@@ -72,6 +73,7 @@ public class Conventional {
 		ConventionalCommand cmd = new ConventionalCommand("cv");
 		cmd.addCommand(new CommandReload());
 		cmd.addCommand(new CommandList());
+		cmd.addCommand(new CommandExclude());
 		ConventionalCommand addCmd = new ConventionalCommand("add");
 		addCmd.addCommand(new CommandAddBlock());
 		addCmd.addCommand(new CommandAddItem());
@@ -165,7 +167,11 @@ public class Conventional {
 			return isAdventureMode_Client(player);
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
-		return !(player instanceof FakePlayer) && !player.worldObj.isRemote && ((EntityPlayerMP) player).interactionManager.getGameType() != GameType.CREATIVE /* && !player.canCommandSenderUseCommand(2, "cv")*/;
+		return !(player instanceof FakePlayer)
+			&& !player.worldObj.isRemote
+			&& ((EntityPlayerMP) player).interactionManager.getGameType() != GameType.CREATIVE
+			&& !config.isExcluded(player.getName())
+			/* && !player.canCommandSenderUseCommand(2, "cv")*/;
 	}
 
 	/*private boolean isAdventureMode_Client(EntityPlayer player) {

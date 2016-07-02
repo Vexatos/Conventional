@@ -1,6 +1,5 @@
 package vexatos.conventional.command;
 
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
@@ -14,6 +13,7 @@ import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.util.RayTracer;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -58,9 +58,9 @@ public class CommandAddEntity extends SubCommand {
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right");
+			return getListOfStringsMatchingLastWord(args, "left", "right");
 		}
 		return super.getTabCompletionOptions(server, sender, args, pos);
 	}

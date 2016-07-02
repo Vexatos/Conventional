@@ -21,6 +21,7 @@ import vexatos.conventional.util.RegistryUtil;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Vexatos
@@ -322,5 +323,19 @@ public class Config {
 
 	public static class EntityList extends ArrayList<String> {
 
+	}
+
+	private final List<String> excludedPlayers = new ArrayList<String>();
+
+	public boolean isExcluded(String name) {
+		return excludedPlayers.contains(name);
+	}
+
+	public void excludePlayer(String name) {
+		if(isExcluded(name)) {
+			excludedPlayers.remove(name);
+		} else {
+			excludedPlayers.add(name);
+		}
 	}
 }

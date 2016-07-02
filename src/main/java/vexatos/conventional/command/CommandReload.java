@@ -17,7 +17,7 @@ public class CommandReload extends SubCommand {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "/cv reload - reloads the whitelists";
+		return "/cv reload - reloads the whitelists.";
 	}
 
 	@Override

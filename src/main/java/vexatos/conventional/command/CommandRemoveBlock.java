@@ -2,7 +2,6 @@ package vexatos.conventional.command;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
@@ -17,6 +16,7 @@ import vexatos.conventional.reference.Config;
 import vexatos.conventional.util.RayTracer;
 import vexatos.conventional.util.RegistryUtil;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -68,11 +68,11 @@ public class CommandRemoveBlock extends SubCommand {
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "left", "right", "break");
+			return getListOfStringsMatchingLastWord(args, "left", "right", "break");
 		} else if(args.length == 2) {
-			return CommandBase.getListOfStringsMatchingLastWord(args, "ignore");
+			return getListOfStringsMatchingLastWord(args, "ignore");
 		}
 		return super.getTabCompletionOptions(server, sender, args, pos);
 	}
