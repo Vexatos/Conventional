@@ -2,7 +2,6 @@ package vexatos.conventional.command;
 
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,32 +16,33 @@ import vexatos.conventional.util.RegistryUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author Vexatos
  */
-public class CommandAddItem extends SubCommand {
+public class CommandAddItem extends SubCommandWithArea {
 
-	public CommandAddItem() {
-		super("item");
+	public CommandAddItem(Supplier<Config.Area> area) {
+		super("item", area);
 	}
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(!(sender instanceof EntityPlayerMP)) {
-			throw new WrongUsageException("cannot process unless called from a player on the server side");
+			throw new CommandException("cannot process unless called from a player on the server side");
 		}
-		Config.ItemList list = Conventional.config.itemsAllowRightclick;
+		Config.ItemList list = area.get().itemsAllowRightclick;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		ItemStack stack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(stack != null && stack.getItem() != null) {
 			final String uid = RegistryUtil.getRegistryName(stack.getItem());
 			if(uid == null) {
-				throw new WrongUsageException("unable to find identifier for item: " + stack.getUnlocalizedName());
+				throw new CommandException("unable to find identifier for item: " + stack.getUnlocalizedName());
 			}
 			Pair<Item, Integer> pair = Pair.of(stack.getItem(), args.length >= 1 && args[0].equalsIgnoreCase("ignore") ? -1 : stack.getItemDamage());
 			if(list.contains(pair) || list.contains(Pair.of(stack.getItem(), -1))) {
-				throw new WrongUsageException("item is already in the whitelist.");
+				throw new CommandException("item is already in the whitelist.");
 			}
 			list.add(pair);
 			sender.addChatMessage(new TextComponentString(String.format("Item '%s' added!", uid)));

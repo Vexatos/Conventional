@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -18,43 +17,44 @@ import vexatos.conventional.util.RegistryUtil;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author Vexatos
  */
-public class CommandRemoveBlock extends SubCommand {
+public class CommandRemoveBlock extends SubCommandWithArea {
 
-	public CommandRemoveBlock() {
-		super("block");
+	public CommandRemoveBlock(Supplier<Config.Area> area) {
+		super("block", area);
 	}
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(!(sender instanceof EntityPlayerMP)) {
-			throw new WrongUsageException("cannot process unless called from a player on the server side");
+			throw new CommandException("cannot process unless called from a player on the server side");
 		}
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left") && !args[0].equalsIgnoreCase("break"))) {
-			throw new WrongUsageException("third argument needs to be 'left' or 'right' or 'break'.");
+			throw new CommandException("third argument needs to be 'left' or 'right' or 'break'.");
 		}
 		Config.BlockList list = args[0].equalsIgnoreCase("right") ?
-			Conventional.config.blocksAllowRightclick : args[0].equalsIgnoreCase("left") ?
-			Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
+			area.get().blocksAllowRightclick : args[0].equalsIgnoreCase("left") ?
+			area.get().blocksAllowLeftclick : area.get().blocksAllowBreak;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		RayTracer.instance().fire(player, 10);
 		RayTraceResult result = RayTracer.instance().getTarget();
 		if(result.typeOfHit != RayTraceResult.Type.BLOCK) {
-			throw new WrongUsageException("the player is not looking at any block");
+			throw new CommandException("the player is not looking at any block");
 		}
 		IBlockState state = player.worldObj.getBlockState(result.getBlockPos());
 		Block block = state.getBlock();
 		if(!block.isAir(state, player.worldObj, result.getBlockPos())) {
 			final String uid = RegistryUtil.getRegistryName(block);
 			if(uid == null) {
-				throw new WrongUsageException("unable to find identifier for block: " + block.getUnlocalizedName());
+				throw new CommandException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
 			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : block.getMetaFromState(state));
 			if(!list.contains(pair)) {
-				throw new WrongUsageException("Block is not in the whitelist.");
+				throw new CommandException("Block is not in the whitelist.");
 			}
 			list.remove(pair);
 			sender.addChatMessage(new TextComponentString(String.format("Block '%s' removed!", uid)));

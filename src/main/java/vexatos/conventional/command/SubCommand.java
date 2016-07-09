@@ -14,7 +14,7 @@ import java.util.List;
  */
 public abstract class SubCommand extends CommandBase {
 
-	protected String name;
+	public final String name;
 
 	public SubCommand(String name) {
 		this.name = name;

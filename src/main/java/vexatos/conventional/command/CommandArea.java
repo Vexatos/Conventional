@@ -6,34 +6,28 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import vexatos.conventional.Conventional;
+import vexatos.conventional.reference.Config.Area;
 import vexatos.conventional.util.StringUtil;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
  */
-public class ConventionalCommand extends SubCommand {
+public class CommandArea extends ConventionalCommand {
 
-	public List<SubCommand> commands = new ArrayList<SubCommand>();
-
-	public ConventionalCommand(String name) {
-		super(name);
-	}
-
-	public void addCommand(SubCommand cmd) {
-		commands.add(cmd);
+	public CommandArea() {
+		super("area");
 	}
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		String text = "";
-		for(SubCommand cmd : commands) {
-			text += (cmd.getUsage(sender) + "\n");
-		}
-		return text.replaceAll("\\n$", "");
+		return "/cv area <name> - Executes commands on the area with the specified name.\n" + super.getUsage(sender);
 	}
 
 	@Override
@@ -54,25 +48,26 @@ public class ConventionalCommand extends SubCommand {
 				return;
 			}
 		}
+		for(Area area : Conventional.config.areas) {
+			if(Objects.equals(area.name, args[0])) {
+				ConventionalCommand cmd = new ConventionalCommand(args[0]);
+				for(Function<Area, SubCommand> areaCommand : Conventional.areaCommands) {
+					cmd.addCommand(areaCommand.apply(area));
+				}
+				cmd.execute(server, sender, StringUtil.dropArgs(args, 1));
+				return;
+			}
+		}
 		throw new WrongUsageException(getCommandUsage(sender));
 	}
 
 	@Override
 	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+		List<String> options = super.getTabCompletionOptions(server, sender, args, pos);
 		if(args.length <= 1) {
-			List<String> words = new ArrayList<String>();
-			for(SubCommand cmd : commands) {
-				words.add(cmd.getCommandName());
-			}
-			return getListOfStringsMatchingLastWord(args, words.toArray(new String[words.size()]));
-		} else {
-			String cmdname = args[0];
-			for(SubCommand cmd : commands) {
-				if(cmd.getCommandName().equalsIgnoreCase(cmdname)) {
-					return cmd.getTabCompletionOptions(server, sender, StringUtil.dropArgs(args, 1), pos);
-				}
-			}
+			options.addAll(getListOfStringsMatchingLastWord(args,
+				Conventional.config.areas.stream().map(a -> a.name).collect(Collectors.toList())));
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return options;
 	}
 }

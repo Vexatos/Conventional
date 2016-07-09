@@ -3,27 +3,29 @@ package vexatos.conventional.command;
 import com.google.common.base.Joiner;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
-import vexatos.conventional.Conventional;
-import vexatos.conventional.reference.Config;
+import vexatos.conventional.reference.Config.Area;
+import vexatos.conventional.reference.Config.BlockList;
+import vexatos.conventional.reference.Config.EntityList;
+import vexatos.conventional.reference.Config.ItemList;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author Vexatos
  */
-public class CommandList extends SubCommand {
+public class CommandList extends SubCommandWithArea {
 
 	private static final Joiner joiner = Joiner.on(", ");
 
-	public CommandList() {
-		super("list");
+	public CommandList(Supplier<Area> area) {
+		super("list", area);
 	}
 
 	@Override
@@ -36,28 +38,28 @@ public class CommandList extends SubCommand {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item") && !args[0].equalsIgnoreCase("entity"))) {
-			throw new WrongUsageException("second argument needs to be 'block' or 'item' or 'entity'.");
+			throw new CommandException("second argument needs to be 'block' or 'item' or 'entity'.");
 		}
 		String[] uids;
 		if(args[0].equalsIgnoreCase("block")) {
 			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left") && !args[1].equalsIgnoreCase("break"))) {
-				throw new WrongUsageException("third argument needs to be 'left' or 'right' or 'break'.");
+				throw new CommandException("third argument needs to be 'left' or 'right' or 'break'.");
 			}
-			Config.BlockList list = args[1].equalsIgnoreCase("right") ?
-				Conventional.config.blocksAllowRightclick : args[1].equalsIgnoreCase("left") ?
-				Conventional.config.blocksAllowLeftclick : Conventional.config.blocksAllowBreak;
-			uids = Conventional.config.getUIDs(list);
+			BlockList list = args[1].equalsIgnoreCase("right") ?
+				area.get().blocksAllowRightclick : args[1].equalsIgnoreCase("left") ?
+				area.get().blocksAllowLeftclick : area.get().blocksAllowBreak;
+			uids = area.get().getUIDs(list);
 		} else if(args[0].equalsIgnoreCase("entity")) {
 			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left"))) {
-				throw new WrongUsageException("third argument needs to be 'left' or 'right'.");
+				throw new CommandException("third argument needs to be 'left' or 'right'.");
 			}
-			Config.EntityList list = args[1].equalsIgnoreCase("right") ?
-				Conventional.config.entitiesAllowRightclick :
-				Conventional.config.entitiesAllowLeftclick;
+			EntityList list = args[1].equalsIgnoreCase("right") ?
+				area.get().entitiesAllowRightclick :
+				area.get().entitiesAllowLeftclick;
 			uids = list.toArray(new String[list.size()]);
 		} else {
-			Config.ItemList list = Conventional.config.itemsAllowRightclick;
-			uids = Conventional.config.getUIDs(list);
+			ItemList list = area.get().itemsAllowRightclick;
+			uids = area.get().getUIDs(list);
 		}
 		sender.addChatMessage(new TextComponentString("Entries in the list:"));
 		Arrays.sort(uids, String.CASE_INSENSITIVE_ORDER);

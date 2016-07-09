@@ -4,7 +4,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.WorldSettings.GameType;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
@@ -26,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
 import vexatos.conventional.command.CommandAddItem;
+import vexatos.conventional.command.CommandArea;
 import vexatos.conventional.command.CommandExclude;
 import vexatos.conventional.command.CommandList;
 import vexatos.conventional.command.CommandReload;
@@ -33,9 +33,18 @@ import vexatos.conventional.command.CommandRemoveBlock;
 import vexatos.conventional.command.CommandRemoveEntity;
 import vexatos.conventional.command.CommandRemoveItem;
 import vexatos.conventional.command.ConventionalCommand;
+import vexatos.conventional.command.SubCommand;
+import vexatos.conventional.command.area.CommandAreaCreate;
+import vexatos.conventional.command.area.CommandAreaRemove;
+import vexatos.conventional.command.area.CommandPosition;
 import vexatos.conventional.integration.chiselsandbits.ChiselsBitsHandler;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 @Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*", dependencies = "after:" + Mods.ChiselsBits + "@[10.9,)")
 public class Conventional {
@@ -45,17 +54,38 @@ public class Conventional {
 
 	public static Config config;
 	public static Logger log;
+	public static File configDir;
+
+	public static List<Function<Config.Area, SubCommand>> areaCommands = new ArrayList<>();
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
 		log = e.getModLog();
+		configDir = e.getModConfigurationDirectory();
 		MinecraftForge.EVENT_BUS.register(this);
 		if(Mods.isLoaded(Mods.ChiselsBits)) {
 			MinecraftForge.EVENT_BUS.register(new ChiselsBitsHandler());
 		}
 		//FMLCommonHandler.instance().bus().register(this);
-		config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+		//config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
+		config = new Config();
 		config.reload();
+
+		areaCommands.add(a -> new CommandList(() -> a));
+		areaCommands.add(a -> {
+			ConventionalCommand addCmd = new ConventionalCommand("add");
+			addCmd.addCommand(new CommandAddBlock(() -> a));
+			addCmd.addCommand(new CommandAddItem(() -> a));
+			addCmd.addCommand(new CommandAddEntity(() -> a));
+			return addCmd;
+		});
+		areaCommands.add(a -> {
+			ConventionalCommand rmvCmd = new ConventionalCommand("remove");
+			rmvCmd.addCommand(new CommandRemoveBlock(() -> a));
+			rmvCmd.addCommand(new CommandRemoveItem(() -> a));
+			rmvCmd.addCommand(new CommandRemoveEntity(() -> a));
+			return rmvCmd;
+		});
 	}
 
 	@EventHandler
@@ -72,17 +102,22 @@ public class Conventional {
 	public void onServerStarting(FMLServerStartingEvent e) {
 		ConventionalCommand cmd = new ConventionalCommand("cv");
 		cmd.addCommand(new CommandReload());
-		cmd.addCommand(new CommandList());
+		cmd.addCommand(new CommandList(() -> config.ALL));
 		cmd.addCommand(new CommandExclude());
 		ConventionalCommand addCmd = new ConventionalCommand("add");
-		addCmd.addCommand(new CommandAddBlock());
-		addCmd.addCommand(new CommandAddItem());
-		addCmd.addCommand(new CommandAddEntity());
+		addCmd.addCommand(new CommandAddBlock(() -> config.ALL));
+		addCmd.addCommand(new CommandAddItem(() -> config.ALL));
+		addCmd.addCommand(new CommandAddEntity(() -> config.ALL));
 		cmd.addCommand(addCmd);
+		CommandArea areaCmd = new CommandArea();
+		areaCmd.addCommand(new CommandAreaCreate(areaCmd));
+		areaCmd.addCommand(new CommandAreaRemove());
+		cmd.addCommand(areaCmd);
+		cmd.addCommand(new CommandPosition());
 		ConventionalCommand rmvCmd = new ConventionalCommand("remove");
-		rmvCmd.addCommand(new CommandRemoveBlock());
-		rmvCmd.addCommand(new CommandRemoveItem());
-		rmvCmd.addCommand(new CommandRemoveEntity());
+		rmvCmd.addCommand(new CommandRemoveBlock(() -> config.ALL));
+		rmvCmd.addCommand(new CommandRemoveItem(() -> config.ALL));
+		rmvCmd.addCommand(new CommandRemoveEntity(() -> config.ALL));
 		cmd.addCommand(rmvCmd);
 		e.registerServerCommand(cmd);
 	}
@@ -94,7 +129,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onPlace(PlaceEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getItemInHand())) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getPlayer(), event.getItemInHand())) {
 			event.setCanceled(true);
 		}
 	}
@@ -128,7 +163,7 @@ public class Conventional {
 				final PlayerInteractEvent.RightClickBlock rcevent = (PlayerInteractEvent.RightClickBlock) event;
 				final boolean
 					validBlock = config.mayRightclick(rcevent.getWorld(), rcevent.getPos()),
-					validItem = config.mayRightclick(rcevent.getItemStack());
+					validItem = config.mayRightclick(event.getEntityPlayer(), rcevent.getItemStack());
 				if(validBlock && validItem) {
 					// Just return.
 				} else if(!validBlock && !validItem) {
@@ -148,7 +183,7 @@ public class Conventional {
 				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteractSpecific) event).getTarget())) {
 					event.setCanceled(true);
 				}
-			} else if(!config.mayRightclick(event.getItemStack())) {
+			} else if(!config.mayRightclick(event.getEntityPlayer(), event.getItemStack())) {
 				event.setCanceled(true);
 			}
 		}

@@ -17,7 +17,7 @@ public class ChiselsBitsHandler {
 		if(isAdventureMode(event.getPlayer())) {
 			if(event.isPlacing()) {
 				if(!config.mayRightclick(event.getWorld(), event.getPos())
-					|| !config.mayRightclick(event.getItemUsed())) {
+					|| !config.mayRightclick(event.getPlayer(), event.getItemUsed())) {
 					event.setCanceled(true);
 				}
 			} else {
