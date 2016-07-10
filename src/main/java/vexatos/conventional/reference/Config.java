@@ -1,6 +1,7 @@
 package vexatos.conventional.reference;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import net.minecraft.block.Block;
@@ -22,17 +23,21 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.util.RegistryUtil;
+import vexatos.conventional.util.storage.AreaStorage;
+import vexatos.conventional.util.storage.ConfigStorage;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -40,7 +45,6 @@ import java.util.Objects;
 public class Config {
 
 	//private Configuration config;
-	//private List<Pair<Block, Integer>> blocksAllowAny = new ArrayList<Pair<Block, Integer>>();
 	public final Area ALL = new Area("all") {
 		@Override
 		public boolean isInArea(@Nullable Entity entity) {
@@ -53,6 +57,7 @@ public class Config {
 		}
 	};
 	private File dataFile;
+	private static final Gson gson = new Gson();
 
 	public Config(/*Configuration configuration*/) {
 		//config = configuration;
@@ -70,89 +75,41 @@ public class Config {
 		ALL.entitiesAllowRightclick.clear();
 		ALL.entitiesAllowLeftclick.clear();
 		boolean success;
-		try {
-			JsonReader r = new JsonReader(new FileReader(dataFile));
-			r.beginObject();
-			while(r.hasNext()) {
-				switch(r.nextName()) {
-					case "areas": {
-						r.beginArray();
-						while(r.hasNext()) {
-							Area area = new Area("tmp");
-							r.beginObject();
-							while(r.hasNext()) {
-								switch(r.nextName()) {
-									case "name": {
-										area.name = r.nextString();
-										if(Objects.equals(area.name, ALL.name)) {
-											ALL.blocksAllowAny.addAll(area.blocksAllowAny);
-											ALL.blocksAllowLeftclick.addAll(area.blocksAllowLeftclick);
-											ALL.blocksAllowBreak.addAll(area.blocksAllowBreak);
-											ALL.blocksAllowRightclick.addAll(area.blocksAllowRightclick);
-											ALL.itemsAllowRightclick.addAll(area.itemsAllowRightclick);
-											ALL.entitiesAllowRightclick.addAll(area.entitiesAllowRightclick);
-											ALL.entitiesAllowLeftclick.addAll(area.entitiesAllowLeftclick);
-											area = ALL;
-										}
-									}
-									break;
-									case "dim": {
-										area.dim = r.nextInt();
-									}
-									break;
-									case "min": {
-										r.beginArray();
-										if(area.pos == null) {
-											area.pos = new AxisAlignedBB(
-												r.nextInt(), r.nextInt(), r.nextInt(),
-												0, 0, 0
-											);
-										} else {
-											area.pos = new AxisAlignedBB(
-												r.nextInt(), r.nextInt(), r.nextInt(),
-												area.pos.maxX, area.pos.maxY, area.pos.maxZ
-											);
-										}
-										r.endArray();
-									}
-									break;
-									case "max": {
-										r.beginArray();
-										if(area.pos == null) {
-											area.pos = new AxisAlignedBB(
-												0, 0, 0,
-												r.nextInt(), r.nextInt(), r.nextInt()
-											);
-										} else {
-											area.pos = new AxisAlignedBB(
-												area.pos.minX, area.pos.minY, area.pos.minZ,
-												r.nextInt(), r.nextInt(), r.nextInt()
-											);
-										}
-										r.endArray();
-									}
-									break;
-									case "whitelists": {
-										area.loadWhitelists(r);
-									}
-									break;
-								}
-							}
-							r.endObject();
-							areas.add(area);
-						}
-						r.endArray();
-					}
-					break;
-				}
+		try(JsonReader r = new JsonReader(new FileReader(dataFile))) {
+			ConfigStorage config = gson.fromJson(r, new ConfigStorage.Token().getType());
+			ArrayList<AreaStorage> areas = config.areas;
+			for(AreaStorage a : areas) {
+				Area area = a.dim != null && a.pos != null ?
+					new Area(a.name, a.dim, new BlockPos(a.pos.minX, a.pos.minY, a.pos.minZ), new BlockPos(a.pos.maxX, a.pos.maxY, a.pos.maxZ)) :
+					new Area(a.name);
+				area.fillBlockList(a.whitelists.blocks.allowAny.toArray(new String[a.whitelists.blocks.allowAny.size()]), area.blocksAllowAny, area.blocksAllowLeftclick, area.blocksAllowRightclick, area.blocksAllowBreak);
+				area.fillBlockList(a.whitelists.blocks.allowLeftclick.toArray(new String[a.whitelists.blocks.allowLeftclick.size()]), area.blocksAllowLeftclick);
+				area.fillBlockList(a.whitelists.blocks.allowBreak.toArray(new String[a.whitelists.blocks.allowBreak.size()]), area.blocksAllowBreak);
+				area.fillBlockList(a.whitelists.blocks.allowRightclick.toArray(new String[a.whitelists.blocks.allowRightclick.size()]), area.blocksAllowRightclick);
+
+				area.fillItemList(a.whitelists.items.allowRightclick.toArray(new String[a.whitelists.items.allowRightclick.size()]), area.itemsAllowRightclick);
+
+				area.fillEntityList(a.whitelists.entities.allowLeftclick.toArray(new String[a.whitelists.entities.allowLeftclick.size()]), area.entitiesAllowLeftclick);
+				area.fillEntityList(a.whitelists.entities.allowRightclick.toArray(new String[a.whitelists.entities.allowRightclick.size()]), area.entitiesAllowRightclick);
+				this.areas.add(area);
 			}
-			r.endObject();
-			r.close();
 			success = true;
-		} catch(IOException e) {
+		} catch(FileNotFoundException e) {
+			Conventional.log.error("Error loading config file", e);
+			success = false;
+		} catch(Exception e1) {
 			success = false;
 		}
-		areas.removeIf(a -> Objects.equals(a.name, ALL.name));
+		areas.stream().filter(a -> Objects.equals(a.name, ALL.name)).collect(Collectors.toList()).forEach(area -> {
+			ALL.blocksAllowAny.addAll(area.blocksAllowAny);
+			ALL.blocksAllowLeftclick.addAll(area.blocksAllowLeftclick);
+			ALL.blocksAllowBreak.addAll(area.blocksAllowBreak);
+			ALL.blocksAllowRightclick.addAll(area.blocksAllowRightclick);
+			ALL.itemsAllowRightclick.addAll(area.itemsAllowRightclick);
+			ALL.entitiesAllowRightclick.addAll(area.entitiesAllowRightclick);
+			ALL.entitiesAllowLeftclick.addAll(area.entitiesAllowLeftclick);
+			areas.remove(area);
+		});
 		areas.add(0, ALL);
 		return success;
 	}
@@ -170,17 +127,36 @@ public class Config {
 	}
 
 	private void doSave(File file) {
-		try {
-			JsonWriter w = new JsonWriter(new FileWriter(file, false));
+		try(JsonWriter w = new JsonWriter(new FileWriter(file, false))) {
 			w.setIndent("  ");
-			w.beginObject();
-			w.name("areas").beginArray();
-			for(Area area : areas) {
-				area.save(w);
+			ConfigStorage config = new ConfigStorage();
+			ArrayList<AreaStorage> areas = config.areas;
+			for(Area area : this.areas) {
+				AreaStorage a = new AreaStorage();
+				a.whitelists.blocks.allowAny.addAll(Arrays.asList(area.getUIDs(true, area.blocksAllowAny)));
+				a.whitelists.blocks.allowLeftclick.addAll(Arrays.asList(area.getUIDs(area.blocksAllowLeftclick)));
+				a.whitelists.blocks.allowBreak.addAll(Arrays.asList(area.getUIDs(area.blocksAllowBreak)));
+				a.whitelists.blocks.allowRightclick.addAll(Arrays.asList(area.getUIDs(area.blocksAllowRightclick)));
+
+				a.whitelists.items.allowRightclick.addAll(Arrays.asList(area.getUIDs(area.itemsAllowRightclick)));
+
+				a.whitelists.entities.allowLeftclick.addAll(area.entitiesAllowLeftclick);
+				a.whitelists.entities.allowRightclick.addAll(area.entitiesAllowRightclick);
+
+				if(area.dim != null && area.pos != null) {
+					a.dim = area.dim;
+					a.pos = new AreaStorage.Position();
+					a.pos.minX = MathHelper.floor_double(area.pos.minX);
+					a.pos.minY = MathHelper.floor_double(area.pos.minY);
+					a.pos.minZ = MathHelper.floor_double(area.pos.minZ);
+					a.pos.maxX = MathHelper.floor_double(area.pos.maxX);
+					a.pos.maxY = MathHelper.floor_double(area.pos.maxY);
+					a.pos.maxZ = MathHelper.floor_double(area.pos.maxZ);
+				}
+				a.name = area.name;
+				areas.add(a);
 			}
-			w.endArray();
-			w.endObject();
-			w.close();
+			gson.toJson(config, new ConfigStorage.Token().getType(), w);
 		} catch(Exception e) {
 			Conventional.log.error("Error saving config file", e);
 		}
@@ -450,121 +426,6 @@ public class Config {
 
 			final int meta = (Strings.isNullOrEmpty(optMeta)) ? -1 : Integer.parseInt(optMeta.substring(1));
 			return new Entry(name, modid, meta);
-		}
-
-		private void fill(JsonWriter w, String name, String... content) throws IOException {
-			w.name(name).beginArray();
-			for(String s : content) {
-				w.value(s);
-			}
-			w.endArray();
-		}
-
-		private String[] readArray(JsonReader r) throws IOException {
-			ArrayList<String> list = new ArrayList<>();
-			r.beginArray();
-			while(r.hasNext()) {
-				list.add(r.nextString());
-			}
-			r.endArray();
-			return list.toArray(new String[list.size()]);
-		}
-
-		public void loadWhitelists(JsonReader r) throws IOException {
-			r.beginObject();
-			while(r.hasNext()) {
-				switch(r.nextName()) {
-					case "blocks": {
-						r.beginObject();
-						while(r.hasNext()) {
-							switch(r.nextName()) {
-								case "allowAnything": {
-									fillBlockList(readArray(r), blocksAllowAny, blocksAllowLeftclick, blocksAllowRightclick, blocksAllowBreak);
-								}
-								break;
-								case "allowLeftclick": {
-									fillBlockList(readArray(r), blocksAllowLeftclick);
-								}
-								break;
-								case "allowBreak": {
-									fillBlockList(readArray(r), blocksAllowBreak);
-								}
-								break;
-								case "allowRightclick": {
-									fillBlockList(readArray(r), blocksAllowRightclick);
-								}
-								break;
-							}
-						}
-						r.endObject();
-					}
-					break;
-					case "items": {
-						r.beginObject();
-						while(r.hasNext()) {
-							switch(r.nextName()) {
-								case "allowRightclick": {
-									fillItemList(readArray(r), itemsAllowRightclick);
-								}
-								break;
-							}
-						}
-						r.endObject();
-					}
-					break;
-					case "entities": {
-						r.beginObject();
-						while(r.hasNext()) {
-							switch(r.nextName()) {
-								case "allowLeftclick": {
-									fillEntityList(readArray(r), entitiesAllowLeftclick);
-								}
-								break;
-								case "allowRightclick": {
-									fillEntityList(readArray(r), entitiesAllowRightclick);
-								}
-								break;
-							}
-						}
-						r.endObject();
-					}
-					break;
-				}
-			}
-			r.endObject();
-		}
-
-		public void save(JsonWriter w) throws IOException {
-			w.beginObject();
-
-			w.name("name").value(name);
-			if(dim != null && pos != null) {
-				w.name("dim").value(dim);
-				w.name("min").beginArray().value(MathHelper.floor_double(pos.minX)).value(MathHelper.floor_double(pos.minY)).value(MathHelper.floor_double(pos.minZ)).endArray();
-				w.name("max").beginArray().value(MathHelper.floor_double(pos.maxX)).value(MathHelper.floor_double(pos.maxY)).value(MathHelper.floor_double(pos.maxZ)).endArray();
-			}
-
-			w.name("whitelists").beginObject();
-
-			w.name("blocks").beginObject();
-			fill(w, "allowAnything", getUIDs(true, blocksAllowAny));
-			fill(w, "allowLeftclick", getUIDs(blocksAllowLeftclick));
-			fill(w, "allowBreak", getUIDs(blocksAllowBreak));
-			fill(w, "allowRightclick", getUIDs(blocksAllowRightclick));
-			w.endObject();
-
-			w.name("items").beginObject();
-			fill(w, "allowRightclick", getUIDs(itemsAllowRightclick));
-			w.endObject();
-
-			w.name("entities").beginObject();
-			fill(w, "allowLeftclick", entitiesAllowLeftclick.toArray(new String[entitiesAllowLeftclick.size()]));
-			fill(w, "allowRightclick", entitiesAllowRightclick.toArray(new String[entitiesAllowRightclick.size()]));
-			w.endObject();
-
-			w.endObject();
-
-			w.endObject();
 		}
 
 		private boolean mayLeftclick(@Nullable IBlockState state) {
