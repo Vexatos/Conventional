@@ -16,7 +16,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import org.apache.commons.io.FileUtils;
@@ -324,13 +323,21 @@ public class Config {
 			this.pos = null;
 		}
 
+		private static boolean isInside(AxisAlignedBB bb, double xCoord, double yCoord, double zCoord) {
+			return (xCoord >= bb.minX && xCoord <= bb.maxX) && ((yCoord >= bb.minY && yCoord <= bb.maxY) && (zCoord >= bb.minZ && zCoord <= bb.maxZ));
+		}
+
+		private static boolean isInside(AxisAlignedBB bb, BlockPos pos) {
+			return isInside(bb, pos.getX(), pos.getY(), pos.getZ());
+		}
+
 		public boolean isInArea(@Nullable Entity entity) {
 			return entity != null && entity.worldObj != null && entity.worldObj.provider != null && entity.worldObj.provider.getDimension() == dim
-				&& this.pos.isVecInside(new Vec3d(entity.posX, entity.posY, entity.posZ));
+				&& isInside(this.pos, entity.posX, entity.posY, entity.posZ);
 		}
 
 		public boolean isInArea(World world, BlockPos pos) {
-			return world.provider != null && world.provider.getDimension() == dim && this.pos.isVecInside(new Vec3d(pos));
+			return world.provider != null && world.provider.getDimension() == dim && isInside(this.pos, pos);
 		}
 
 		public String[] getUIDs(BlockList... lists) {
