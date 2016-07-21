@@ -69,7 +69,6 @@ public class Conventional {
 		//FMLCommonHandler.instance().bus().register(this);
 		//config = new Config(new Configuration(e.getSuggestedConfigurationFile()));
 		config = new Config();
-		config.reload();
 
 		areaCommands.add(a -> new CommandList(() -> a));
 		areaCommands.add(a -> {
@@ -90,7 +89,7 @@ public class Conventional {
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
-		config.save();
+		// NO-OP
 	}
 
 	@EventHandler
