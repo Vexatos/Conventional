@@ -51,9 +51,7 @@ public class Config {
 	//private Configuration config;
 	public final Area ALL = new Area("all") {
 		@Override
-		public boolean isInArea(
-			@Nullable
-				Entity entity) {
+		public boolean isInArea(@Nullable Entity entity) {
 			return true;
 		}
 
@@ -270,9 +268,7 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayRightclick(Entity user,
-		@Nullable
-			ItemStack stack) {
+	public boolean mayRightclick(Entity user, @Nullable ItemStack stack) {
 		for(Area area : areas) {
 			if(area.mayRightclick(user, stack)) {
 				return true;
@@ -395,9 +391,7 @@ public class Config {
 			return isInside(bb, pos.getX(), pos.getY(), pos.getZ());
 		}
 
-		public boolean isInArea(
-			@Nullable
-				Entity entity) {
+		public boolean isInArea(@Nullable Entity entity) {
 			return entity != null && entity.worldObj != null && entity.worldObj.provider != null && entity.worldObj.provider.getDimension() == dim
 				&& isInside(this.pos, entity.posX, entity.posY, entity.posZ);
 		}
@@ -501,9 +495,7 @@ public class Config {
 			return new Entry(name, modid, meta);
 		}
 
-		private boolean mayLeftclick(
-			@Nullable
-				IBlockState state) {
+		private boolean mayLeftclick(@Nullable IBlockState state) {
 			if(state == null) {
 				return true;
 			}
@@ -525,9 +517,7 @@ public class Config {
 			return isInArea(entity) && entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
 		}
 
-		private boolean mayBreak(
-			@Nullable
-				IBlockState state) {
+		private boolean mayBreak(@Nullable IBlockState state) {
 			if(state == null) {
 				return true;
 			}
@@ -545,9 +535,7 @@ public class Config {
 			return isInArea(world, pos) && mayBreak(world.getBlockState(pos));
 		}
 
-		private boolean mayRightclick(
-			@Nullable
-				IBlockState state) {
+		private boolean mayRightclick(@Nullable IBlockState state) {
 			if(state == null) {
 				return true;
 			}
@@ -561,9 +549,7 @@ public class Config {
 			return false;
 		}
 
-		public boolean mayRightclick(Entity user,
-			@Nullable
-				ItemStack stack) {
+		public boolean mayRightclick(Entity user, @Nullable ItemStack stack) {
 			if(!isInArea(user)) {
 				return false;
 			}
