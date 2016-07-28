@@ -10,7 +10,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -27,7 +26,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
@@ -244,13 +242,11 @@ public class Conventional {
 			log.info(Thread.currentThread().getName() + ": " + e.toString());
 	}*/
 
-	public final Set<Runnable> pendingServer = new HashSet<>();
+	private final Set<Runnable> pending = new HashSet<>();
 
 	public void schedule(Runnable r) {
-		if(!proxy.isClient()) {
-			synchronized(pendingServer) {
-				pendingServer.add(r);
-			}
+		synchronized(pending) {
+			pending.add(r);
 		}
 	}
 
@@ -258,9 +254,9 @@ public class Conventional {
 	public void onTick(ServerTickEvent e) {
 		if(e.phase == TickEvent.Phase.START) {
 			final Runnable[] pending;
-			synchronized(pendingServer) {
-				pending = pendingServer.isEmpty() ? null : pendingServer.toArray(new Runnable[0]);
-				pendingServer.clear();
+			synchronized(this.pending) {
+				pending = this.pending.isEmpty() ? null : this.pending.toArray(new Runnable[0]);
+				this.pending.clear();
 			}
 			if(pending != null) {
 				for(Runnable r : pending) {
@@ -276,7 +272,7 @@ public class Conventional {
 
 	@SubscribeEvent
 	public void onLogin(PlayerLoggedInEvent e) {
-		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER && e.player instanceof EntityPlayerMP) {
+		if(e.player instanceof EntityPlayerMP) {
 			config.sendConfigTo((EntityPlayerMP) e.player);
 		}
 	}
