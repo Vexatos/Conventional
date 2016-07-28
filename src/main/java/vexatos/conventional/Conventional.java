@@ -10,9 +10,12 @@ import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
@@ -21,6 +24,10 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
@@ -38,15 +45,20 @@ import vexatos.conventional.command.area.CommandAreaCreate;
 import vexatos.conventional.command.area.CommandAreaRemove;
 import vexatos.conventional.command.area.CommandPosition;
 import vexatos.conventional.integration.chiselsandbits.ChiselsBitsHandler;
+import vexatos.conventional.network.NetworkHandlerClient;
+import vexatos.conventional.network.PacketHandler;
+import vexatos.conventional.proxy.CommonProxy;
 import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Mods;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
-@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", acceptableRemoteVersions = "*", dependencies = "after:" + Mods.ChiselsBits + "@[10.9,)")
+@Mod(modid = Mods.Conventional, name = Mods.Conventional, version = "@VERSION@", dependencies = "after:" + Mods.ChiselsBits + "@[10.9,)")
 public class Conventional {
 
 	@Instance
@@ -57,6 +69,11 @@ public class Conventional {
 	public static File configDir;
 
 	public static List<Function<Config.Area, SubCommand>> areaCommands = new ArrayList<>();
+
+	@SidedProxy(clientSide = "vexatos.conventional.proxy.ClientProxy", serverSide = "vexatos.conventional.proxy.CommonProxy")
+	public static CommonProxy proxy;
+
+	public static PacketHandler packet;
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -88,13 +105,18 @@ public class Conventional {
 	}
 
 	@EventHandler
+	public void init(FMLInitializationEvent e) {
+		packet = new PacketHandler(Mods.Conventional, new NetworkHandlerClient(), null);
+	}
+
+	@EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
 		// NO-OP
 	}
 
 	@EventHandler
 	public void onServerStart(FMLServerAboutToStartEvent e) {
-		config.reload();
+		config.reloadFromFile();
 	}
 
 	@EventHandler
@@ -123,7 +145,7 @@ public class Conventional {
 
 	@EventHandler
 	public void onServerStopping(FMLServerStoppingEvent e) {
-		config.save();
+		// NO-OP
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -221,4 +243,41 @@ public class Conventional {
 		if(s.contains("Attack") || s.contains("Interact"))
 			log.info(Thread.currentThread().getName() + ": " + e.toString());
 	}*/
+
+	public final Set<Runnable> pendingServer = new HashSet<>();
+
+	public void schedule(Runnable r) {
+		if(!proxy.isClient()) {
+			synchronized(pendingServer) {
+				pendingServer.add(r);
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onTick(ServerTickEvent e) {
+		if(e.phase == TickEvent.Phase.START) {
+			final Runnable[] pending;
+			synchronized(pendingServer) {
+				pending = pendingServer.isEmpty() ? null : pendingServer.toArray(new Runnable[0]);
+				pendingServer.clear();
+			}
+			if(pending != null) {
+				for(Runnable r : pending) {
+					try {
+						r.run();
+					} catch(Throwable t) {
+						Conventional.log.warn("Error in scheduled tick action.", t);
+					}
+				}
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onLogin(PlayerLoggedInEvent e) {
+		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER && e.player instanceof EntityPlayerMP) {
+			config.sendConfigTo((EntityPlayerMP) e.player);
+		}
+	}
 }

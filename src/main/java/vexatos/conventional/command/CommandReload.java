@@ -22,7 +22,7 @@ public class CommandReload extends SubCommand {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		Conventional.config.reload();
+		Conventional.config.reloadFromFile();
 		Conventional.config.save();
 		sender.addChatMessage(new TextComponentString("Whitelists reloaded!"));
 	}
