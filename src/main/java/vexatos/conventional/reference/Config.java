@@ -148,12 +148,18 @@ public class Config {
 		return reload(() -> this.loadFromString(s));
 	}
 
-	public void save() {
+	public void save(){
+		save(true);
+	}
+
+	public void save(boolean overwrite) {
 		if(dataFile.exists()) {
-			File tmpFile = new File(dataFile.getAbsolutePath() + ".tmp");
-			doSave(tmpFile);
-			if(FileUtils.deleteQuietly(dataFile)) {
-				tmpFile.renameTo(dataFile);
+			if(overwrite) {
+				File tmpFile = new File(dataFile.getAbsolutePath() + ".tmp");
+				doSave(tmpFile);
+				if(FileUtils.deleteQuietly(dataFile)) {
+					tmpFile.renameTo(dataFile);
+				}
 			}
 		} else {
 			doSave(dataFile);

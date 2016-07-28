@@ -109,7 +109,7 @@ public class Conventional {
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
-		// NO-OP
+		config.save(false); // generate config file if it doesn't exist yet.
 	}
 
 	@EventHandler
