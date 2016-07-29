@@ -201,7 +201,7 @@ public class Conventional {
 				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteractSpecific) event).getTarget())) {
 					event.setCanceled(true);
 				}
-			} else if(!config.mayRightclick(event.getEntityPlayer(), event.getItemStack())) {
+			} else if(event.isCancelable() && !config.mayRightclick(event.getEntityPlayer(), event.getItemStack())) {
 				event.setCanceled(true);
 			}
 		}
