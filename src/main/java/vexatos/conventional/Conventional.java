@@ -2,7 +2,6 @@ package vexatos.conventional;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.world.WorldSettings.GameType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -222,8 +221,7 @@ public class Conventional {
 		}*/
 		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
 		return !(player instanceof FakePlayer)
-			&& !player.worldObj.isRemote
-			&& ((EntityPlayerMP) player).interactionManager.getGameType() != GameType.CREATIVE
+			&& !player.isCreative()
 			&& !config.isExcluded(player.getName())
 			/* && !player.canCommandSenderUseCommand(2, "cv")*/;
 	}
