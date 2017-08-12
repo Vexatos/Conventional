@@ -45,21 +45,21 @@ public class CommandRemoveItem extends SubCommandWithArea {
 				throw new CommandException("item is not in the whitelist.");
 			}
 			list.remove(pair);
-			sender.addChatMessage(new TextComponentString(String.format("Item '%s' removed!", uid)));
+			sender.sendMessage(new TextComponentString(String.format("Item '%s' removed!", uid)));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv remove item [ignore] - Removes the item currently in your hand. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "ignore");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

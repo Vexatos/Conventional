@@ -45,9 +45,9 @@ public class CommandRemoveBlock extends SubCommandWithArea {
 		if(result.typeOfHit != RayTraceResult.Type.BLOCK) {
 			throw new CommandException("the player is not looking at any block");
 		}
-		IBlockState state = player.worldObj.getBlockState(result.getBlockPos());
+		IBlockState state = player.world.getBlockState(result.getBlockPos());
 		Block block = state.getBlock();
-		if(!block.isAir(state, player.worldObj, result.getBlockPos())) {
+		if(!block.isAir(state, player.world, result.getBlockPos())) {
 			final String uid = RegistryUtil.getRegistryName(block);
 			if(uid == null) {
 				throw new CommandException("unable to find identifier for block: " + block.getUnlocalizedName());
@@ -57,23 +57,23 @@ public class CommandRemoveBlock extends SubCommandWithArea {
 				throw new CommandException("Block is not in the whitelist.");
 			}
 			list.remove(pair);
-			sender.addChatMessage(new TextComponentString(String.format("Block '%s' removed!", uid)));
+			sender.sendMessage(new TextComponentString(String.format("Block '%s' removed!", uid)));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv remove block <left|right|break> [ignore] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "left", "right", "break");
 		} else if(args.length == 2) {
 			return getListOfStringsMatchingLastWord(args, "ignore");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

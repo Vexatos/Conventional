@@ -29,7 +29,7 @@ public class CommandList extends SubCommandWithArea {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv list block <left|right|break> - returns all entries in the specified list\n"
 			+ "/cv list item - same, just for the item list.\n"
 			+ "/cv list entity <left|right> - same, just for the entity lists.";
@@ -61,23 +61,23 @@ public class CommandList extends SubCommandWithArea {
 			ItemList list = area.get().itemsAllowRightclick;
 			uids = area.get().getUIDs(list);
 		}
-		sender.addChatMessage(new TextComponentString("Entries in the list:"));
+		sender.sendMessage(new TextComponentString("Entries in the list:"));
 		Arrays.sort(uids, String.CASE_INSENSITIVE_ORDER);
 		ArrayList<String> line = new ArrayList<String>(5);
 		for(String uid : uids) {
 			line.add(uid);
 			if(line.size() >= 5) {
-				sender.addChatMessage(new TextComponentString(joiner.join(line)));
+				sender.sendMessage(new TextComponentString(joiner.join(line)));
 				line.clear();
 			}
 		}
 		if(!line.isEmpty()) {
-			sender.addChatMessage(new TextComponentString(joiner.join(line)));
+			sender.sendMessage(new TextComponentString(joiner.join(line)));
 		}
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "block", "item", "entity");
 		} else if(args.length == 2) {
@@ -87,6 +87,6 @@ public class CommandList extends SubCommandWithArea {
 				return getListOfStringsMatchingLastWord(args, "left", "right");
 			}
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

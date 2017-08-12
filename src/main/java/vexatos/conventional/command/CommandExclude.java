@@ -20,7 +20,7 @@ public class CommandExclude extends SubCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv exclude [player] - temporarily excludes a player (or you) from being affected by cv. Does not persist across server launches.\n"
 			+ "Run again to include a player once more.";
 	}
@@ -29,16 +29,16 @@ public class CommandExclude extends SubCommand {
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		final String name = args.length < 1 ? sender.getName() : args[0];
 		Conventional.config.excludePlayer(name);
-		sender.addChatMessage(new TextComponentString(
+		sender.sendMessage(new TextComponentString(
 			String.format("player '%s' has been %s.", name, Conventional.config.isExcluded(name) ? "excluded" : "included again")
 		));
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, server.getAllUsernames());
+			return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

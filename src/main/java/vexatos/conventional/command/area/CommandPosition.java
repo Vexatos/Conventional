@@ -25,7 +25,7 @@ public class CommandPosition extends SubCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv pos <1|2|get> - sets a corner of the selection area or returns the currently specified ones.";
 	}
 
@@ -44,7 +44,7 @@ public class CommandPosition extends SubCommand {
 				pos1.getX(), pos1.getY(), pos1.getZ()) : "???";
 			final String s2 = pos2 != null ? String.format(Locale.ENGLISH, "%s, %s, %s",
 				pos2.getX(), pos2.getY(), pos2.getZ()) : "???";
-			sender.addChatMessage(new TextComponentString(
+			sender.sendMessage(new TextComponentString(
 				String.format(Locale.ENGLISH, "current positions: [%s -> %s].", s1, s2)
 			));
 		}
@@ -64,7 +64,7 @@ public class CommandPosition extends SubCommand {
 				}
 				break;
 			}
-			sender.addChatMessage(new TextComponentString(
+			sender.sendMessage(new TextComponentString(
 				String.format(Locale.ENGLISH, "Set position %s to %s, %s, %s.", i, pos.getX(), pos.getY(), pos.getZ())
 			));
 		} catch(NumberFormatException e) {
@@ -73,10 +73,10 @@ public class CommandPosition extends SubCommand {
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return CommandBase.getListOfStringsMatchingLastWord(args, "1", "2", "get");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

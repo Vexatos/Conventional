@@ -16,7 +16,7 @@ public class CommandReload extends SubCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv reload - reloads the whitelists.";
 	}
 
@@ -24,6 +24,6 @@ public class CommandReload extends SubCommand {
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		Conventional.config.reloadFromFile();
 		Conventional.config.save();
-		sender.addChatMessage(new TextComponentString("Whitelists reloaded!"));
+		sender.sendMessage(new TextComponentString("Whitelists reloaded!"));
 	}
 }

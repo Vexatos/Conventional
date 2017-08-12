@@ -45,21 +45,21 @@ public class CommandAddItem extends SubCommandWithArea {
 				throw new CommandException("item is already in the whitelist.");
 			}
 			list.add(pair);
-			sender.addChatMessage(new TextComponentString(String.format("Item '%s' added!", uid)));
+			sender.sendMessage(new TextComponentString(String.format("Item '%s' added!", uid)));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv add item [ignore] - adds the item currently in your hand. 'ignore' makes it ignore metadata.";
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "ignore");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

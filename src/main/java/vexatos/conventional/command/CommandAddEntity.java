@@ -26,7 +26,7 @@ public class CommandAddEntity extends SubCommandWithArea {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv add entity <left|right> - adds the entity class you are currently looking at.";
 	}
 
@@ -52,16 +52,16 @@ public class CommandAddEntity extends SubCommandWithArea {
 				throw new CommandException("entity is already in the whitelist.");
 			}
 			list.add(name);
-			sender.addChatMessage(new TextComponentString(String.format("Entity '%s' added!", name)));
+			sender.sendMessage(new TextComponentString(String.format("Entity '%s' added!", name)));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "left", "right");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

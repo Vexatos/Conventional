@@ -214,12 +214,12 @@ public class Config {
 			if(area.dim != null && area.pos != null) {
 				a.dim = area.dim;
 				a.pos = new AreaStorage.Position();
-				a.pos.minX = MathHelper.floor_double(area.pos.minX);
-				a.pos.minY = MathHelper.floor_double(area.pos.minY);
-				a.pos.minZ = MathHelper.floor_double(area.pos.minZ);
-				a.pos.maxX = MathHelper.floor_double(area.pos.maxX);
-				a.pos.maxY = MathHelper.floor_double(area.pos.maxY);
-				a.pos.maxZ = MathHelper.floor_double(area.pos.maxZ);
+				a.pos.minX = MathHelper.floor(area.pos.minX);
+				a.pos.minY = MathHelper.floor(area.pos.minY);
+				a.pos.minZ = MathHelper.floor(area.pos.minZ);
+				a.pos.maxX = MathHelper.floor(area.pos.maxX);
+				a.pos.maxY = MathHelper.floor(area.pos.maxY);
+				a.pos.maxZ = MathHelper.floor(area.pos.maxZ);
 			}
 			a.name = area.name;
 			areas.add(a);
@@ -398,7 +398,7 @@ public class Config {
 		}
 
 		public boolean isInArea(@Nullable Entity entity) {
-			return entity != null && entity.worldObj != null && entity.worldObj.provider != null && entity.worldObj.provider.getDimension() == dim
+			return entity != null && entity.world != null && entity.world.provider != null && entity.world.provider.getDimension() == dim
 				&& isInside(this.pos, entity.posX, entity.posY, entity.posZ);
 		}
 

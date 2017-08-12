@@ -26,7 +26,7 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv remove entity <left|right> - removes the entity class you are currently looking at.";
 	}
 
@@ -52,16 +52,16 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 				throw new CommandException("entity is not in the whitelist.");
 			}
 			list.remove(name);
-			sender.addChatMessage(new TextComponentString(String.format("Entity '%s' removed!", name)));
+			sender.sendMessage(new TextComponentString(String.format("Entity '%s' removed!", name)));
 			Conventional.config.save();
 		}
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
 			return getListOfStringsMatchingLastWord(args, "left", "right");
 		}
-		return super.getTabCompletionOptions(server, sender, args, pos);
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

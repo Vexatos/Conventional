@@ -23,7 +23,7 @@ public class CommonProxy {
 
 	@Nullable
 	public World getWorld(int dimensionId) {
-		return FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimensionId);
+		return FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimensionId);
 	}
 
 	public int getCurrentClientDimension() {
@@ -33,7 +33,7 @@ public class CommonProxy {
 	public void handlePacket(@Nullable MessageHandlerBase client, @Nullable MessageHandlerBase server, Packet packet, INetHandler handler) {
 		try {
 			if(server != null) {
-				server.onMessage(packet, handler, ((NetHandlerPlayServer) handler).playerEntity);
+				server.onMessage(packet, handler, ((NetHandlerPlayServer) handler).player);
 			}
 		} catch(Exception e) {
 			Conventional.log.warn("Caught a network exception! Is someone sending malformed packets?");

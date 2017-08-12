@@ -26,24 +26,24 @@ public class CommandArea extends ConventionalCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
-		return "/cv area <name> - Executes commands on the area with the specified name.\n" + super.getUsage(sender);
+	public String getCommandUsage(ICommandSender sender) {
+		return "/cv area <name> - Executes commands on the area with the specified name.\n" + super.getCommandUsage(sender);
 	}
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if(args.length < 1) {
-			throw new WrongUsageException(getCommandUsage(sender));
+			throw new WrongUsageException(getUsage(sender));
 		}
 		if(args[0].equalsIgnoreCase("help")) {
-			String[] usage = getUsage(sender).split("\n");
+			String[] usage = getCommandUsage(sender).split("\n");
 			for(String s : usage) {
-				sender.addChatMessage(new TextComponentString(" - " + s));
+				sender.sendMessage(new TextComponentString(" - " + s));
 			}
 			return;
 		}
 		for(SubCommand cmd : commands) {
-			if(cmd.getCommandName().equalsIgnoreCase(args[0])) {
+			if(cmd.getName().equalsIgnoreCase(args[0])) {
 				cmd.execute(server, sender, StringUtil.dropArgs(args, 1));
 				return;
 			}
@@ -58,12 +58,12 @@ public class CommandArea extends ConventionalCommand {
 				return;
 			}
 		}
-		throw new WrongUsageException(getCommandUsage(sender));
+		throw new WrongUsageException(getUsage(sender));
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		List<String> options = super.getTabCompletionOptions(server, sender, args, pos);
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+		List<String> options = super.getTabCompletions(server, sender, args, pos);
 		if(args.length <= 1) {
 			options.addAll(getListOfStringsMatchingLastWord(args,
 				Conventional.config.areas.stream().map(a -> a.name).collect(Collectors.toList())));

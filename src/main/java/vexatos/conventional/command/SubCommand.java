@@ -21,7 +21,7 @@ public abstract class SubCommand extends CommandBase {
 	}
 
 	@Override
-	public String getCommandName() {
+	public String getName() {
 		return this.name;
 	}
 
@@ -31,17 +31,17 @@ public abstract class SubCommand extends CommandBase {
 	}
 
 	@Override
-	public final String getCommandUsage(ICommandSender sender) {
+	public final String getUsage(ICommandSender sender) {
 		return "/cv help for more information";
 	}
 
-	public abstract String getUsage(ICommandSender sender);
+	public abstract String getCommandUsage(ICommandSender sender);
 
 	@Override
 	public abstract void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException;
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		return super.getTabCompletionOptions(server, sender, args, pos);
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+		return super.getTabCompletions(server, sender, args, pos);
 	}
 }

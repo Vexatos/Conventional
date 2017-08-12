@@ -27,7 +27,7 @@ public class CommandAreaRemove extends SubCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv area remove <name> - Removes the area with the specified name if it exists.";
 	}
 
@@ -49,10 +49,10 @@ public class CommandAreaRemove extends SubCommand {
 		}
 		if(!toRemove.isEmpty()) {
 			for(Area area : toRemove) {
-				sender.addChatMessage(new TextComponentString(
+				sender.sendMessage(new TextComponentString(
 					String.format(Locale.ENGLISH, "Removed area '%s' at [%s, %s, %s -> %s, %s, %d].", args[0],
-						MathHelper.floor_double(area.pos.minX), MathHelper.floor_double(area.pos.minY), MathHelper.floor_double(area.pos.minZ),
-						MathHelper.floor_double(area.pos.maxX), MathHelper.floor_double(area.pos.maxY), MathHelper.floor_double(area.pos.maxZ))
+						MathHelper.floor(area.pos.minX), MathHelper.floor(area.pos.minY), MathHelper.floor(area.pos.minZ),
+						MathHelper.floor(area.pos.maxX), MathHelper.floor(area.pos.maxY), MathHelper.floor(area.pos.maxZ))
 				));
 			}
 			Conventional.config.areas.removeAll(toRemove);
@@ -63,7 +63,7 @@ public class CommandAreaRemove extends SubCommand {
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		return getListOfStringsMatchingLastWord(args,
 			Conventional.config.areas.stream().map(a -> a.name).collect(Collectors.toList()));
 	}

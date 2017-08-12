@@ -147,14 +147,14 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onPlace(PlaceEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getPlayer(), event.getItemInHand())) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayRightclick(event.getPlayer(), event.getPlayer().getHeldItem(event.getHand()))) {
 			event.setCanceled(true);
 		}
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBreakSpeed(BreakSpeed event) {
-		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer().worldObj, event.getPos())) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer().world, event.getPos())) {
 			//event.setCanceled(true);
 			event.setNewSpeed(Float.MIN_VALUE);
 		}
@@ -216,10 +216,10 @@ public class Conventional {
 
 	// checks for serverside and adventure mode
 	public static boolean isAdventureMode(EntityPlayer player) {
-		/*if(player.worldObj.isRemote) {
+		/*if(player.world.isRemote) {
 			return isAdventureMode_Client(player);
 		}*/
-		//return !player.worldObj.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
+		//return !player.world.isRemote && ((EntityPlayerMP) player).theItemInWorldManager.getGameType().isAdventure();
 		return !(player instanceof FakePlayer)
 			&& !player.isCreative()
 			&& !config.isExcluded(player.getName())

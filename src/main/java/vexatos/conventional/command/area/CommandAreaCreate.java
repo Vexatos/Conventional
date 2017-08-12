@@ -27,7 +27,7 @@ public class CommandAreaCreate extends SubCommand {
 	}
 
 	@Override
-	public String getUsage(ICommandSender sender) {
+	public String getCommandUsage(ICommandSender sender) {
 		return "/cv area create <name> - Creates an area between the currently selected positions with the specified name";
 	}
 
@@ -59,7 +59,7 @@ public class CommandAreaCreate extends SubCommand {
 		final BlockPos pos2 = Conventional.config.positions2.get(sender.getName());
 		Conventional.config.areas.add(new Area(args[0], sender.getEntityWorld().provider.getDimension(), pos1, pos2)
 		);
-		sender.addChatMessage(new TextComponentString(
+		sender.sendMessage(new TextComponentString(
 			String.format(Locale.ENGLISH, "Added area '%s' at [%s, %s, %s -> %s, %s, %s].", args[0],
 				pos1.getX(), pos1.getY(), pos1.getZ(), pos2.getX(), pos2.getY(), pos2.getZ())
 		));
