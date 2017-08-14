@@ -1,6 +1,6 @@
 [
 {
-  "modid": "Conventional",
+  "modid": "conventional",
   "name": "Conventional",
   "description": "Making Adventure (and survival) mode a little more safe.",
   "version": "${version}",

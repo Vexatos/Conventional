@@ -9,7 +9,7 @@ public class Mods {
 
 	// The mod itself
 	public static final String
-		Conventional = "Conventional";
+		Conventional = "conventional";
 
 	// Other mods
 	public static final String
