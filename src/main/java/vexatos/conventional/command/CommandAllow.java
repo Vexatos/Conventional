@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import vexatos.conventional.Conventional;
+import vexatos.conventional.event.PermissionEvent;
 import vexatos.conventional.reference.Config;
 
 import javax.annotation.Nullable;
@@ -47,6 +48,9 @@ public class CommandAllow extends SubCommandWithArea {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+		if(args.length <= 1) {
+			return getListOfStringsMatchingLastWord(args, PermissionEvent.Registry.getIDs());
+		}
 		return super.getTabCompletions(server, sender, args, pos);
 	}
 }
