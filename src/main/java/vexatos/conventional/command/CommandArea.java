@@ -67,6 +67,16 @@ public class CommandArea extends ConventionalCommand {
 		if(args.length <= 1) {
 			options.addAll(getListOfStringsMatchingLastWord(args,
 				Conventional.config.areas.stream().map(a -> a.name).collect(Collectors.toList())));
+		} else {
+			for(Area area : Conventional.config.areas) {
+				if(Objects.equals(area.name, args[0])) {
+					ConventionalCommand cmd = new ConventionalCommand(args[0]);
+					for(Function<Area, SubCommand> areaCommand : Conventional.areaCommands) {
+						cmd.addCommand(areaCommand.apply(area));
+					}
+					return cmd.getTabCompletions(server, sender, StringUtil.dropArgs(args, 1), pos);
+				}
+			}
 		}
 		return options;
 	}

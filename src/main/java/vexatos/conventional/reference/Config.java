@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonWriter;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -37,11 +38,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -82,8 +83,10 @@ public class Config {
 
 			area.fillItemList(a.whitelists.items.allowRightclick.toArray(new String[a.whitelists.items.allowRightclick.size()]), area.itemsAllowRightclick);
 
-			area.fillEntityList(a.whitelists.entities.allowLeftclick.toArray(new String[a.whitelists.entities.allowLeftclick.size()]), area.entitiesAllowLeftclick);
-			area.fillEntityList(a.whitelists.entities.allowRightclick.toArray(new String[a.whitelists.entities.allowRightclick.size()]), area.entitiesAllowRightclick);
+			area.fillStringList(a.whitelists.entities.allowLeftclick.toArray(new String[a.whitelists.entities.allowLeftclick.size()]), area.entitiesAllowLeftclick);
+			area.fillStringList(a.whitelists.entities.allowRightclick.toArray(new String[a.whitelists.entities.allowRightclick.size()]), area.entitiesAllowRightclick);
+
+			area.fillStringList(a.permissions.toArray(new String[a.permissions.size()]), area.permissions);
 			this.areas.add(area);
 		}
 	}
@@ -125,17 +128,22 @@ public class Config {
 		ALL.itemsAllowRightclick.clear();
 		ALL.entitiesAllowRightclick.clear();
 		ALL.entitiesAllowLeftclick.clear();
+		ALL.permissions.clear();
 		boolean success = f.get();
-		areas.stream().filter(a -> Objects.equals(a.name, ALL.name)).collect(Collectors.toList()).forEach(area -> {
-			ALL.blocksAllowAny.addAll(area.blocksAllowAny);
-			ALL.blocksAllowLeftclick.addAll(area.blocksAllowLeftclick);
-			ALL.blocksAllowBreak.addAll(area.blocksAllowBreak);
-			ALL.blocksAllowRightclick.addAll(area.blocksAllowRightclick);
-			ALL.itemsAllowRightclick.addAll(area.itemsAllowRightclick);
-			ALL.entitiesAllowRightclick.addAll(area.entitiesAllowRightclick);
-			ALL.entitiesAllowLeftclick.addAll(area.entitiesAllowLeftclick);
-			areas.remove(area);
-		});
+		for(Iterator<Area> i = areas.iterator(); i.hasNext(); ) {
+			Area area = i.next();
+			if(Objects.equals(area.name, ALL.name)) {
+				ALL.blocksAllowAny.addAll(area.blocksAllowAny);
+				ALL.blocksAllowLeftclick.addAll(area.blocksAllowLeftclick);
+				ALL.blocksAllowBreak.addAll(area.blocksAllowBreak);
+				ALL.blocksAllowRightclick.addAll(area.blocksAllowRightclick);
+				ALL.itemsAllowRightclick.addAll(area.itemsAllowRightclick);
+				ALL.entitiesAllowRightclick.addAll(area.entitiesAllowRightclick);
+				ALL.entitiesAllowLeftclick.addAll(area.entitiesAllowLeftclick);
+				ALL.permissions.addAll(area.permissions);
+				i.remove();
+			}
+		}
 		areas.add(0, ALL);
 		return success;
 	}
@@ -148,7 +156,7 @@ public class Config {
 		return reload(() -> this.loadFromString(s));
 	}
 
-	public void save(){
+	public void save() {
 		save(true);
 	}
 
@@ -210,6 +218,8 @@ public class Config {
 
 			a.whitelists.entities.allowLeftclick.addAll(area.entitiesAllowLeftclick);
 			a.whitelists.entities.allowRightclick.addAll(area.entitiesAllowRightclick);
+
+			a.permissions.addAll(area.permissions);
 
 			if(area.dim != null && area.pos != null) {
 				a.dim = area.dim;
@@ -311,6 +321,15 @@ public class Config {
 		return false;
 	}
 
+	public boolean hasPermission(String id, EntityPlayer player) {
+		for(Area area : areas) {
+			if(area.hasPermission(id, player)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static class Entry {
 
 		public final String name;
@@ -332,7 +351,7 @@ public class Config {
 
 	}
 
-	public static class EntityList extends ArrayList<String> {
+	public static class StringList extends ArrayList<String> {
 
 	}
 
@@ -370,8 +389,10 @@ public class Config {
 		//private List<Pair<Item, Integer>> itemsAllowAny = new ArrayList<Pair<Item, Integer>>();
 		public final ItemList itemsAllowRightclick = new ItemList();
 
-		public final EntityList entitiesAllowRightclick = new EntityList();
-		public final EntityList entitiesAllowLeftclick = new EntityList();
+		public final StringList entitiesAllowRightclick = new StringList();
+		public final StringList entitiesAllowLeftclick = new StringList();
+
+		public final StringList permissions = new StringList();
 
 		public Integer dim;
 		public AxisAlignedBB pos;
@@ -473,8 +494,8 @@ public class Config {
 			}
 		}
 
-		private void fillEntityList(String[] entityList, EntityList... toFill) {
-			for(EntityList list : toFill) {
+		private void fillStringList(String[] entityList, StringList... toFill) {
+			for(StringList list : toFill) {
 				Collections.addAll(list, entityList);
 			}
 		}
@@ -576,6 +597,10 @@ public class Config {
 
 		public boolean mayRightclick(Entity entity) {
 			return isInArea(entity) && entitiesAllowRightclick.contains(entity.getClass().getCanonicalName());
+		}
+
+		public boolean hasPermission(String id, EntityPlayer player) {
+			return isInArea(player) && permissions.contains(id);
 		}
 	}
 }

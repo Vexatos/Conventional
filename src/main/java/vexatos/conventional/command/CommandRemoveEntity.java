@@ -38,7 +38,7 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left"))) {
 			throw new CommandException("third argument needs to be 'left' or 'right'.");
 		}
-		Config.EntityList list = args[0].equalsIgnoreCase("right") ? area.get().entitiesAllowRightclick : area.get().entitiesAllowLeftclick;
+		Config.StringList list = args[0].equalsIgnoreCase("right") ? area.get().entitiesAllowRightclick : area.get().entitiesAllowLeftclick;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		RayTracer.instance().fire(player, 10);
 		RayTraceResult result = RayTracer.instance().getTarget();

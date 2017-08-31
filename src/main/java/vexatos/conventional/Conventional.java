@@ -29,7 +29,9 @@ import org.apache.logging.log4j.Logger;
 import vexatos.conventional.command.CommandAddBlock;
 import vexatos.conventional.command.CommandAddEntity;
 import vexatos.conventional.command.CommandAddItem;
+import vexatos.conventional.command.CommandAllow;
 import vexatos.conventional.command.CommandArea;
+import vexatos.conventional.command.CommandDeny;
 import vexatos.conventional.command.CommandExclude;
 import vexatos.conventional.command.CommandList;
 import vexatos.conventional.command.CommandReload;
@@ -41,6 +43,7 @@ import vexatos.conventional.command.SubCommand;
 import vexatos.conventional.command.area.CommandAreaCreate;
 import vexatos.conventional.command.area.CommandAreaRemove;
 import vexatos.conventional.command.area.CommandPosition;
+import vexatos.conventional.event.PermissionEvent;
 import vexatos.conventional.integration.chiselsandbits.ChiselsBitsHandler;
 import vexatos.conventional.network.NetworkHandlerClient;
 import vexatos.conventional.network.PacketHandler;
@@ -99,6 +102,8 @@ public class Conventional {
 			rmvCmd.addCommand(new CommandRemoveEntity(() -> a));
 			return rmvCmd;
 		});
+		areaCommands.add(a -> new CommandAllow(() -> a));
+		areaCommands.add(a -> new CommandDeny(() -> a));
 	}
 
 	@EventHandler
@@ -121,6 +126,8 @@ public class Conventional {
 		ConventionalCommand cmd = new ConventionalCommand("cv");
 		cmd.addCommand(new CommandReload());
 		cmd.addCommand(new CommandList(() -> config.ALL));
+		cmd.addCommand(new CommandAllow(() -> config.ALL));
+		cmd.addCommand(new CommandDeny(() -> config.ALL));
 		cmd.addCommand(new CommandExclude());
 		ConventionalCommand addCmd = new ConventionalCommand("add");
 		addCmd.addCommand(new CommandAddBlock(() -> config.ALL));
@@ -210,6 +217,13 @@ public class Conventional {
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onEntityLeftclick(AttackEntityEvent event) {
 		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getTarget())) {
+			event.setCanceled(true);
+		}
+	}
+
+	@SubscribeEvent
+	public void onPermissionEvent(PermissionEvent event) {
+		if(isAdventureMode(event.player) && !config.hasPermission(event.id, event.player)) {
 			event.setCanceled(true);
 		}
 	}

@@ -1,6 +1,6 @@
 package vexatos.conventional.util;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * @author Vexatos
@@ -8,14 +8,6 @@ import java.util.ArrayList;
 public class StringUtil {
 
 	public static String[] dropArgs(String[] args, int count) {
-		ArrayList<String> list = new ArrayList<String>();
-		for(String s : args) {
-			if(count > 0) {
-				count--;
-			} else {
-				list.add(s);
-			}
-		}
-		return list.toArray(new String[list.size()]);
+		return Arrays.stream(args).skip(count).toArray(String[]::new);
 	}
 }

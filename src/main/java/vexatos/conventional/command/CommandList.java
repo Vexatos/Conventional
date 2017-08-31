@@ -8,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import vexatos.conventional.reference.Config.Area;
 import vexatos.conventional.reference.Config.BlockList;
-import vexatos.conventional.reference.Config.EntityList;
+import vexatos.conventional.reference.Config.StringList;
 import vexatos.conventional.reference.Config.ItemList;
 
 import javax.annotation.Nullable;
@@ -35,10 +35,12 @@ public class CommandList extends SubCommandWithArea {
 			+ "/cv list entity <left|right> - same, just for the entity lists.";
 	}
 
+	private static final List<String> VALID_COMMANDS = Arrays.asList("block", "item", "entity", "permissions");
+
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		if(args.length < 1 || (!args[0].equalsIgnoreCase("block") && !args[0].equalsIgnoreCase("item") && !args[0].equalsIgnoreCase("entity"))) {
-			throw new CommandException("second argument needs to be 'block' or 'item' or 'entity'.");
+		if(args.length < 1 || !VALID_COMMANDS.contains(args[0])) {
+			throw new CommandException("second argument needs to be 'block' or 'item' or 'entity' or 'permissions'.");
 		}
 		String[] uids;
 		if(args[0].equalsIgnoreCase("block")) {
@@ -53,9 +55,12 @@ public class CommandList extends SubCommandWithArea {
 			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left"))) {
 				throw new CommandException("third argument needs to be 'left' or 'right'.");
 			}
-			EntityList list = args[1].equalsIgnoreCase("right") ?
+			StringList list = args[1].equalsIgnoreCase("right") ?
 				area.get().entitiesAllowRightclick :
 				area.get().entitiesAllowLeftclick;
+			uids = list.toArray(new String[list.size()]);
+		} else if(args[0].equalsIgnoreCase("permissions")) {
+			StringList list = area.get().permissions;
 			uids = list.toArray(new String[list.size()]);
 		} else {
 			ItemList list = area.get().itemsAllowRightclick;
@@ -79,7 +84,7 @@ public class CommandList extends SubCommandWithArea {
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
 		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, "block", "item", "entity");
+			return getListOfStringsMatchingLastWord(args, "block", "item", "entity", "permissions");
 		} else if(args.length == 2) {
 			if("block".equalsIgnoreCase(args[0])) {
 				return getListOfStringsMatchingLastWord(args, "left", "right", "break");

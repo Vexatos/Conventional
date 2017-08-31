@@ -15,6 +15,7 @@ public class AreaStorage {
 	public Position pos;
 
 	public Whitelists whitelists = new Whitelists();
+	public ArrayList<String> permissions = new ArrayList<>();
 
 	public static class Position {
 
