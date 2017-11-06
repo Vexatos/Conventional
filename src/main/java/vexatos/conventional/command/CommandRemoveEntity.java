@@ -8,13 +8,20 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.TextComponentString;
+import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
+import vexatos.conventional.reference.Config.EntityList;
 import vexatos.conventional.util.RayTracer;
+import vexatos.conventional.util.StringUtil;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -27,7 +34,7 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/cv remove entity <left|right> - removes the entity class you are currently looking at.";
+		return "/cv remove entity <left|right> [sneak/nosneak] - removes the entity class you are currently looking at.";
 	}
 
 	@Override
@@ -38,7 +45,7 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 		if(args.length < 1 || (!args[0].equalsIgnoreCase("right") && !args[0].equalsIgnoreCase("left"))) {
 			throw new CommandException("third argument needs to be 'left' or 'right'.");
 		}
-		Config.StringList list = args[0].equalsIgnoreCase("right") ? area.get().entitiesAllowRightclick : area.get().entitiesAllowLeftclick;
+		EntityList list = args[0].equalsIgnoreCase("right") ? area.get().entitiesAllowRightclick : area.get().entitiesAllowLeftclick;
 		EntityPlayerMP player = (EntityPlayerMP) sender;
 		RayTracer.instance().fire(player, 10);
 		RayTraceResult result = RayTracer.instance().getTarget();
@@ -48,10 +55,16 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 		Entity entity = result.entityHit;
 		if(!entity.isDead) {
 			String name = entity.getClass().getCanonicalName();
-			if(!list.contains(name)) {
+			List<String> modifiers = Arrays.stream(StringUtil.dropArgs(args, 1)).map(s -> s.toLowerCase(Locale.ENGLISH)).collect(Collectors.toList());
+			if(modifiers.contains("sneak") && modifiers.contains("nosneak")) {
+				throw new CommandException("cannot specify 'sneak' and 'nosneak' at the same time.");
+			}
+			Boolean sneak = modifiers.contains("sneak") ? Boolean.TRUE : modifiers.contains("nosneak") ? Boolean.FALSE : null;
+			Pair<String, Boolean> pair = Pair.of(name, sneak);
+			if(!list.contains(pair)) {
 				throw new CommandException("entity is not in the whitelist.");
 			}
-			list.remove(name);
+			list.remove(pair);
 			sender.sendMessage(new TextComponentString(String.format("Entity '%s' removed!", name)));
 			Conventional.config.save();
 		}
@@ -59,9 +72,6 @@ public class CommandRemoveEntity extends SubCommandWithArea {
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, "left", "right");
-		}
-		return super.getTabCompletions(server, sender, args, pos);
+		return Optional.ofNullable(CommandAddEntity.tabCompletions(server, sender, args, pos)).orElseGet(() -> super.getTabCompletions(server, sender, args, pos));
 	}
 }

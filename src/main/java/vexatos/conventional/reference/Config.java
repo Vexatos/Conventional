@@ -83,8 +83,8 @@ public class Config {
 
 			area.fillItemList(a.whitelists.items.allowRightclick.toArray(new String[a.whitelists.items.allowRightclick.size()]), area.itemsAllowRightclick);
 
-			area.fillStringList(a.whitelists.entities.allowLeftclick.toArray(new String[a.whitelists.entities.allowLeftclick.size()]), area.entitiesAllowLeftclick);
-			area.fillStringList(a.whitelists.entities.allowRightclick.toArray(new String[a.whitelists.entities.allowRightclick.size()]), area.entitiesAllowRightclick);
+			area.fillEntityList(a.whitelists.entities.allowLeftclick.toArray(new String[a.whitelists.entities.allowLeftclick.size()]), area.entitiesAllowLeftclick);
+			area.fillEntityList(a.whitelists.entities.allowRightclick.toArray(new String[a.whitelists.entities.allowRightclick.size()]), area.entitiesAllowRightclick);
 
 			area.fillStringList(a.permissions.toArray(new String[a.permissions.size()]), area.permissions);
 			this.areas.add(area);
@@ -216,8 +216,8 @@ public class Config {
 
 			a.whitelists.items.allowRightclick.addAll(Arrays.asList(area.getUIDs(area.itemsAllowRightclick)));
 
-			a.whitelists.entities.allowLeftclick.addAll(area.entitiesAllowLeftclick);
-			a.whitelists.entities.allowRightclick.addAll(area.entitiesAllowRightclick);
+			a.whitelists.entities.allowLeftclick.addAll(Arrays.asList(area.getUIDs(area.entitiesAllowLeftclick)));
+			a.whitelists.entities.allowRightclick.addAll(Arrays.asList(area.getUIDs(area.entitiesAllowRightclick)));
 
 			a.permissions.addAll(area.permissions);
 
@@ -237,9 +237,9 @@ public class Config {
 		return config;
 	}
 
-	public boolean mayLeftclick(World world, BlockPos pos) {
+	public boolean mayLeftclick(EntityPlayer player, World world, BlockPos pos) {
 		for(Area area : areas) {
-			if(area.mayLeftclick(world, pos)) {
+			if(area.mayLeftclick(player, world, pos)) {
 				return true;
 			}
 		}
@@ -256,18 +256,18 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayLeftclick(Entity entity) {
+	public boolean mayLeftclick(EntityPlayer player, Entity entity) {
 		for(Area area : areas) {
-			if(area.mayLeftclick(entity)) {
+			if(area.mayLeftclick(player, entity)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public boolean mayBreak(World world, BlockPos pos) {
+	public boolean mayBreak(EntityPlayer player, World world, BlockPos pos) {
 		for(Area area : areas) {
-			if(area.mayBreak(world, pos)) {
+			if(area.mayBreak(player, world, pos)) {
 				return true;
 			}
 		}
@@ -293,9 +293,9 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayRightclick(World world, BlockPos pos) {
+	public boolean mayRightclick(EntityPlayer player, World world, BlockPos pos) {
 		for(Area area : areas) {
-			if(area.mayRightclick(world, pos)) {
+			if(area.mayRightclick(player, world, pos)) {
 				return true;
 			}
 		}
@@ -312,9 +312,9 @@ public class Config {
 		return false;
 	}
 
-	public boolean mayRightclick(Entity entity) {
+	public boolean mayRightclick(EntityPlayer player, Entity entity) {
 		for(Area area : areas) {
-			if(area.mayRightclick(entity)) {
+			if(area.mayRightclick(player, entity)) {
 				return true;
 			}
 		}
@@ -330,28 +330,67 @@ public class Config {
 		return false;
 	}
 
+	private static boolean matchSneak(boolean isSneaking, @Nullable Boolean shouldSneak) {
+		return shouldSneak == null || isSneaking == shouldSneak;
+	}
+
 	private static class Entry {
 
 		public final String name;
 		public final String modid;
 		public final int meta;
+		public final Boolean sneak;
 
-		private Entry(String name, String modid, int meta) {
+		private Entry(String name, String modid, int meta, @Nullable Boolean sneak) {
 			this.name = name;
 			this.modid = modid;
 			this.meta = meta;
+			this.sneak = sneak;
+		}
+
+		public ItemData itemData() {
+			return new ItemData(this.meta, this.sneak);
 		}
 	}
 
-	public static class BlockList extends ArrayList<Pair<Block, Integer>> {
+	public static class ItemData {
+
+		public final int metadata;
+		public final Boolean sneak;
+
+		public ItemData(int metadata, @Nullable Boolean sneak) {
+			this.metadata = metadata;
+			this.sneak = sneak;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(metadata, sneak);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if(obj instanceof ItemData) {
+				ItemData data = (ItemData) obj;
+				return metadata == data.metadata && Objects.equals(sneak, data.sneak);
+			}
+			return false;
+		}
+	}
+
+	public static class BlockList extends ArrayList<Pair<Block, ItemData>> {
 
 	}
 
-	public static class ItemList extends ArrayList<Pair<Item, Integer>> {
+	public static class ItemList extends ArrayList<Pair<Item, ItemData>> {
 
 	}
 
 	public static class StringList extends ArrayList<String> {
+
+	}
+
+	public static class EntityList extends ArrayList<Pair<String, Boolean>> {
 
 	}
 
@@ -389,8 +428,8 @@ public class Config {
 		//private List<Pair<Item, Integer>> itemsAllowAny = new ArrayList<Pair<Item, Integer>>();
 		public final ItemList itemsAllowRightclick = new ItemList();
 
-		public final StringList entitiesAllowRightclick = new StringList();
-		public final StringList entitiesAllowLeftclick = new StringList();
+		public final EntityList entitiesAllowRightclick = new EntityList();
+		public final EntityList entitiesAllowLeftclick = new EntityList();
 
 		public final StringList permissions = new StringList();
 
@@ -434,13 +473,16 @@ public class Config {
 		public String[] getUIDs(boolean isAllowAny, BlockList... lists) {
 			ArrayList<String> uids = new ArrayList<String>();
 			for(BlockList list : lists) {
-				for(Pair<Block, Integer> pair : list) {
+				for(Pair<Block, ItemData> pair : list) {
 					if(!isAllowAny && blocksAllowAny.contains(pair)) {
 						continue;
 					}
 					final String uid = RegistryUtil.getRegistryName(pair.getKey());
 					if(uid != null) {
-						String s = uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : "");
+						String s = uid + (pair.getValue().metadata != -1 ? ("@" + pair.getValue().metadata) : "");
+						if(pair.getValue().sneak != null) {
+							s += "!" + (pair.getValue().sneak ? "s" : "n");
+						}
 						if(uids.contains(s) || uids.contains(uid)) {
 							continue;
 						}
@@ -454,11 +496,29 @@ public class Config {
 		public String[] getUIDs(ItemList... lists) {
 			ArrayList<String> uids = new ArrayList<String>();
 			for(ItemList list : lists) {
-				for(Pair<Item, Integer> pair : list) {
+				for(Pair<Item, ItemData> pair : list) {
 					final String uid = RegistryUtil.getRegistryName(pair.getKey());
 					if(uid != null) {
-						uids.add(uid + (pair.getValue() != -1 ? ("@" + pair.getValue()) : ""));
+						String s = uid + (pair.getValue().metadata != -1 ? ("@" + pair.getValue().metadata) : "");
+						if(pair.getValue().sneak != null) {
+							s += "!" + (pair.getValue().sneak ? "s" : "n");
+						}
+						uids.add(s);
 					}
+				}
+			}
+			return uids.toArray(new String[uids.size()]);
+		}
+
+		public String[] getUIDs(EntityList... lists) {
+			ArrayList<String> uids = new ArrayList<String>();
+			for(EntityList list : lists) {
+				for(Pair<String, Boolean> pair : list) {
+					String s = pair.getKey();
+					if(pair.getValue() != null) {
+						s += "!" + (pair.getValue() ? "s" : "n");
+					}
+					uids.add(s);
 				}
 			}
 			return uids.toArray(new String[uids.size()]);
@@ -469,7 +529,7 @@ public class Config {
 				Entry entry = getEntry(data);
 				Block block = Block.REGISTRY.getObject(new ResourceLocation(entry.modid, entry.name));
 				if(block != null) {
-					Pair<Block, Integer> pair = Pair.of(block, entry.meta);
+					Pair<Block, ItemData> pair = Pair.of(block, entry.itemData());
 					for(BlockList list : toFill) {
 						list.add(pair);
 					}
@@ -484,12 +544,22 @@ public class Config {
 				Entry entry = getEntry(data);
 				Item item = Item.REGISTRY.getObject(new ResourceLocation(entry.modid, entry.name));
 				if(item != null) {
-					Pair<Item, Integer> pair = Pair.of(item, entry.meta);
+					Pair<Item, ItemData> pair = Pair.of(item, entry.itemData());
 					for(ItemList list : toFill) {
 						list.add(pair);
 					}
 				} else {
 					Conventional.log.warn("Found an item added to a whitelist that does not exist: " + data);
+				}
+			}
+		}
+
+		private void fillEntityList(String[] entityList, EntityList... toFill) {
+			for(String data : entityList) {
+				Entry entry = getEntry(data); // Hijacking the block and item parser because it works for now.
+				Pair<String, Boolean> pair = Pair.of(entry.name, entry.sneak);
+				for(EntityList list : toFill) {
+					list.add(pair);
 				}
 			}
 		}
@@ -501,6 +571,16 @@ public class Config {
 		}
 
 		private Entry getEntry(String data) {
+			final int boolSplitIndex = data.lastIndexOf("!");
+			final Boolean sneak;
+			if(boolSplitIndex > 0) {
+				String modifiers = data.substring(boolSplitIndex);
+				data = data.substring(0, boolSplitIndex);
+				sneak = modifiers.contains("s") ? Boolean.TRUE : modifiers.contains("n") ? Boolean.FALSE : null;
+			} else {
+				sneak = null;
+			}
+
 			final int splitIndex = data.lastIndexOf('@');
 			String name, optMeta, modid;
 			if(splitIndex > 0) {
@@ -519,58 +599,66 @@ public class Config {
 			}
 
 			final int meta = (Strings.isNullOrEmpty(optMeta)) ? -1 : Integer.parseInt(optMeta.substring(1));
-			return new Entry(name, modid, meta);
+			return new Entry(name, modid, meta, sneak);
 		}
 
-		private boolean mayLeftclick(@Nullable IBlockState state) {
+		private boolean mayLeftclick(EntityPlayer player, @Nullable IBlockState state) {
 			if(state == null) {
 				return true;
 			}
 			//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
 			final Block block = state.getBlock();
-			for(Pair<Block, Integer> pair : blocksAllowLeftclick) {
-				if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
-					return true;
+			for(Pair<Block, ItemData> pair : blocksAllowLeftclick) {
+				if(pair.getKey().equals(block) && (pair.getValue().metadata == -1 || pair.getValue().metadata == block.getMetaFromState(state))) {
+					return matchSneak(player.isSneaking(), pair.getValue().sneak);
 				}
 			}
 			return false;
 		}
 
-		public boolean mayLeftclick(World world, BlockPos pos) {
-			return isInArea(world, pos) && mayLeftclick(world.getBlockState(pos));
+		public boolean mayLeftclick(EntityPlayer player, World world, BlockPos pos) {
+			return isInArea(world, pos) && mayLeftclick(player, world.getBlockState(pos));
 		}
 
-		public boolean mayLeftclick(Entity entity) {
-			return isInArea(entity) && entitiesAllowLeftclick.contains(entity.getClass().getCanonicalName());
-		}
-
-		private boolean mayBreak(@Nullable IBlockState state) {
-			if(state == null) {
-				return true;
+		public boolean mayLeftclick(EntityPlayer player, Entity entity) {
+			if(!isInArea(entity)) {
+				return false;
 			}
-			//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
-			final Block block = state.getBlock();
-			for(Pair<Block, Integer> pair : blocksAllowBreak) {
-				if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
-					return true;
+			for(Pair<String, Boolean> pair : entitiesAllowLeftclick) {
+				if(pair.getKey().equals(entity.getClass().getCanonicalName())) {
+					return matchSneak(player.isSneaking(), pair.getValue());
 				}
 			}
 			return false;
 		}
 
-		public boolean mayBreak(World world, BlockPos pos) {
-			return isInArea(world, pos) && mayBreak(world.getBlockState(pos));
-		}
-
-		private boolean mayRightclick(@Nullable IBlockState state) {
+		private boolean mayBreak(EntityPlayer player, @Nullable IBlockState state) {
 			if(state == null) {
 				return true;
 			}
 			//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
 			final Block block = state.getBlock();
-			for(Pair<Block, Integer> pair : blocksAllowRightclick) {
-				if(pair.getKey().equals(block) && (pair.getValue() == -1 || pair.getValue() == block.getMetaFromState(state))) {
-					return true;
+			for(Pair<Block, ItemData> pair : blocksAllowBreak) {
+				if(pair.getKey().equals(block) && (pair.getValue().metadata == -1 || pair.getValue().metadata == block.getMetaFromState(state))) {
+					return matchSneak(player.isSneaking(), pair.getValue().sneak);
+				}
+			}
+			return false;
+		}
+
+		public boolean mayBreak(EntityPlayer player, World world, BlockPos pos) {
+			return isInArea(world, pos) && mayBreak(player, world.getBlockState(pos));
+		}
+
+		private boolean mayRightclick(EntityPlayer player, @Nullable IBlockState state) {
+			if(state == null) {
+				return true;
+			}
+			//final Pair<Block, Integer> toTest = new Pair<Block, Integer>(block, meta);
+			final Block block = state.getBlock();
+			for(Pair<Block, ItemData> pair : blocksAllowRightclick) {
+				if(pair.getKey().equals(block) && (pair.getValue().metadata == -1 || pair.getValue().metadata == block.getMetaFromState(state))) {
+					return matchSneak(player.isSneaking(), pair.getValue().sneak);
 				}
 			}
 			return false;
@@ -583,20 +671,28 @@ public class Config {
 			if(stack == null) {
 				return false;
 			}
-			for(Pair<Item, Integer> pair : itemsAllowRightclick) {
-				if(pair.getKey().equals(stack.getItem()) && (pair.getValue() == -1 || pair.getValue() == stack.getItemDamage())) {
-					return true;
+			for(Pair<Item, ItemData> pair : itemsAllowRightclick) {
+				if(pair.getKey().equals(stack.getItem()) && (pair.getValue().metadata == -1 || pair.getValue().metadata == stack.getItemDamage())) {
+					return matchSneak(user.isSneaking(), pair.getValue().sneak);
 				}
 			}
 			return false;
 		}
 
-		public boolean mayRightclick(World world, BlockPos pos) {
-			return isInArea(world, pos) && mayRightclick(world.getBlockState(pos));
+		public boolean mayRightclick(EntityPlayer player, World world, BlockPos pos) {
+			return isInArea(world, pos) && mayRightclick(player, world.getBlockState(pos));
 		}
 
-		public boolean mayRightclick(Entity entity) {
-			return isInArea(entity) && entitiesAllowRightclick.contains(entity.getClass().getCanonicalName());
+		public boolean mayRightclick(EntityPlayer player, Entity entity) {
+			if(!isInArea(entity)) {
+				return false;
+			}
+			for(Pair<String, Boolean> pair : entitiesAllowRightclick) {
+				if(pair.getKey().equals(entity.getClass().getCanonicalName())) {
+					return matchSneak(player.isSneaking(), pair.getValue());
+				}
+			}
+			return false;
 		}
 
 		public boolean hasPermission(String id, EntityPlayer player) {

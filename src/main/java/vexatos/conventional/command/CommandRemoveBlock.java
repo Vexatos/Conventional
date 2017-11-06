@@ -12,12 +12,18 @@ import net.minecraft.util.text.TextComponentString;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
+import vexatos.conventional.reference.Config.ItemData;
 import vexatos.conventional.util.RayTracer;
 import vexatos.conventional.util.RegistryUtil;
+import vexatos.conventional.util.StringUtil;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -52,7 +58,13 @@ public class CommandRemoveBlock extends SubCommandWithArea {
 			if(uid == null) {
 				throw new CommandException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
-			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : block.getMetaFromState(state));
+			List<String> modifiers = Arrays.stream(StringUtil.dropArgs(args, 1)).map(s -> s.toLowerCase(Locale.ENGLISH)).collect(Collectors.toList());
+			int meta = modifiers.contains("ignore") ? -1 : block.getMetaFromState(state);
+			if(modifiers.contains("sneak") && modifiers.contains("nosneak")) {
+				throw new CommandException("cannot specify 'sneak' and 'nosneak' at the same time.");
+			}
+			Boolean sneak = modifiers.contains("sneak") ? Boolean.TRUE : modifiers.contains("nosneak") ? Boolean.FALSE : null;
+			Pair<Block, ItemData> pair = Pair.of(block, new ItemData(meta, sneak));
 			if(!list.contains(pair)) {
 				throw new CommandException("Block is not in the whitelist.");
 			}
@@ -64,16 +76,11 @@ public class CommandRemoveBlock extends SubCommandWithArea {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/cv remove block <left|right|break> [ignore] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
+		return "/cv remove block <left|right|break> [ignore] [sneak/nosneak] - removes the block you are currently looking at. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, "left", "right", "break");
-		} else if(args.length == 2) {
-			return getListOfStringsMatchingLastWord(args, "ignore");
-		}
-		return super.getTabCompletions(server, sender, args, pos);
+		return Optional.ofNullable(CommandAddBlock.tabCompletions(server, sender, args, pos)).orElseGet(() -> super.getTabCompletions(server, sender, args, pos));
 	}
 }

@@ -12,12 +12,19 @@ import net.minecraft.util.text.TextComponentString;
 import org.apache.commons.lang3.tuple.Pair;
 import vexatos.conventional.Conventional;
 import vexatos.conventional.reference.Config;
+import vexatos.conventional.reference.Config.ItemData;
 import vexatos.conventional.util.RayTracer;
 import vexatos.conventional.util.RegistryUtil;
+import vexatos.conventional.util.StringUtil;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -52,8 +59,14 @@ public class CommandAddBlock extends SubCommandWithArea {
 			if(uid == null) {
 				throw new CommandException("unable to find identifier for block: " + block.getUnlocalizedName());
 			}
-			Pair<Block, Integer> pair = Pair.of(block, (args.length >= 2 && args[1].equalsIgnoreCase("ignore")) ? -1 : block.getMetaFromState(state));
-			if(list.contains(pair) || list.contains(Pair.of(block, -1))) {
+			List<String> modifiers = Arrays.stream(StringUtil.dropArgs(args, 1)).map(s -> s.toLowerCase(Locale.ENGLISH)).collect(Collectors.toList());
+			int meta = modifiers.contains("ignore") ? -1 : block.getMetaFromState(state);
+			if(modifiers.contains("sneak") && modifiers.contains("nosneak")) {
+				throw new CommandException("cannot specify 'sneak' and 'nosneak' at the same time.");
+			}
+			Boolean sneak = modifiers.contains("sneak") ? Boolean.TRUE : modifiers.contains("nosneak") ? Boolean.FALSE : null;
+			Pair<Block, ItemData> pair = Pair.of(block, new ItemData(meta, sneak));
+			if(list.contains(pair) || list.contains(Pair.of(block, new ItemData(-1, sneak)))) {
 				throw new CommandException("block is already in the whitelist.");
 			}
 			list.add(pair);
@@ -64,16 +77,27 @@ public class CommandAddBlock extends SubCommandWithArea {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/cv add block <left|right|break> [ignore] - adds the block you are currently looking at. 'ignore' makes it ignore metadata.";
+		return "/cv add block <left|right|break> [ignore] [sneak/nosneak] - adds the block you are currently looking at. 'ignore' makes it ignore metadata. 'sneak' and 'nosneak' only allow it while the player is or is not sneaking.";
+	}
+
+	@Nullable
+	static List<String> tabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+		if(args.length <= 1) {
+			return getListOfStringsMatchingLastWord(args, "left", "right", "break");
+		} else if(args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, "ignore", "sneak", "nosneak");
+		} else if(args.length == 3) {
+			if(args[1].equalsIgnoreCase("ignore")) {
+				return getListOfStringsMatchingLastWord(args, "sneak", "nosneak");
+			} else if(args[1].equalsIgnoreCase("sneak") || args[1].equalsIgnoreCase("nosneak")) {
+				return getListOfStringsMatchingLastWord(args, "ignore");
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, "left", "right", "break");
-		} else if(args.length == 2) {
-			return getListOfStringsMatchingLastWord(args, "ignore");
-		}
-		return super.getTabCompletions(server, sender, args, pos);
+		return Optional.ofNullable(tabCompletions(server, sender, args, pos)).orElseGet(() -> super.getTabCompletions(server, sender, args, pos));
 	}
 }

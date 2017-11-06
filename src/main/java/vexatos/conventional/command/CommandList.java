@@ -6,8 +6,10 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import vexatos.conventional.reference.Config;
 import vexatos.conventional.reference.Config.Area;
 import vexatos.conventional.reference.Config.BlockList;
+import vexatos.conventional.reference.Config.EntityList;
 import vexatos.conventional.reference.Config.ItemList;
 import vexatos.conventional.reference.Config.StringList;
 
@@ -55,10 +57,10 @@ public class CommandList extends SubCommandWithArea {
 			if(args.length < 2 || (!args[1].equalsIgnoreCase("right") && !args[1].equalsIgnoreCase("left"))) {
 				throw new CommandException("third argument needs to be 'left' or 'right'.");
 			}
-			StringList list = args[1].equalsIgnoreCase("right") ?
+			EntityList list = args[1].equalsIgnoreCase("right") ?
 				area.get().entitiesAllowRightclick :
 				area.get().entitiesAllowLeftclick;
-			uids = list.toArray(new String[list.size()]);
+			uids = area.get().getUIDs(list);
 		} else if(args[0].equalsIgnoreCase("permissions")) {
 			StringList list = area.get().permissions;
 			uids = list.toArray(new String[list.size()]);

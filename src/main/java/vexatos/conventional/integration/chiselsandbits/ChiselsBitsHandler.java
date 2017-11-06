@@ -16,12 +16,12 @@ public class ChiselsBitsHandler {
 	public void onChisel(EventBlockBitModification event) {
 		if(isAdventureMode(event.getPlayer())) {
 			if(event.isPlacing()) {
-				if(!config.mayRightclick(event.getWorld(), event.getPos())
+				if(!config.mayRightclick(event.getPlayer(), event.getWorld(), event.getPos())
 					|| !config.mayRightclick(event.getPlayer(), event.getItemUsed())) {
 					event.setCanceled(true);
 				}
 			} else {
-				if(!config.mayBreak(event.getWorld(), event.getPos())) {
+				if(!config.mayBreak(event.getPlayer(), event.getWorld(), event.getPos())) {
 					event.setCanceled(true);
 				}
 			}

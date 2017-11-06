@@ -161,7 +161,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBreakSpeed(BreakSpeed event) {
-		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer().world, event.getPos())) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayBreak(event.getEntityPlayer(), event.getEntityPlayer().world, event.getPos())) {
 			//event.setCanceled(true);
 			event.setNewSpeed(Float.MIN_VALUE);
 		}
@@ -169,7 +169,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBreak(BreakEvent event) {
-		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.getWorld(), event.getPos())) {
+		if(isAdventureMode(event.getPlayer()) && !config.mayBreak(event.getPlayer(), event.getWorld(), event.getPos())) {
 			event.setCanceled(true);
 		}
 	}
@@ -181,13 +181,13 @@ public class Conventional {
 		}
 		if(isAdventureMode(event.getEntityPlayer())) {
 			if(event instanceof PlayerInteractEvent.LeftClickBlock) {
-				if(!config.mayLeftclick(event.getWorld(), event.getPos())) {
+				if(!config.mayLeftclick(event.getEntityPlayer(), event.getWorld(), event.getPos())) {
 					event.setCanceled(true);
 				}
 			} else if(event instanceof PlayerInteractEvent.RightClickBlock) {
 				final PlayerInteractEvent.RightClickBlock rcevent = (PlayerInteractEvent.RightClickBlock) event;
 				final boolean
-					validBlock = config.mayRightclick(rcevent.getWorld(), rcevent.getPos()),
+					validBlock = config.mayRightclick(event.getEntityPlayer(), rcevent.getWorld(), rcevent.getPos()),
 					validItem = config.mayRightclick(event.getEntityPlayer(), rcevent.getItemStack());
 				if(validBlock && validItem) {
 					// Just return.
@@ -201,11 +201,11 @@ public class Conventional {
 					rcevent.setUseItem(Result.ALLOW);
 				}
 			} else if(event instanceof PlayerInteractEvent.EntityInteract) {
-				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteract) event).getTarget())) {
+				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(event.getEntityPlayer(), ((PlayerInteractEvent.EntityInteract) event).getTarget())) {
 					event.setCanceled(true);
 				}
 			} else if(event instanceof PlayerInteractEvent.EntityInteractSpecific) {
-				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(((PlayerInteractEvent.EntityInteractSpecific) event).getTarget())) {
+				if(isAdventureMode(event.getEntityPlayer()) && !config.mayRightclick(event.getEntityPlayer(), ((PlayerInteractEvent.EntityInteractSpecific) event).getTarget())) {
 					event.setCanceled(true);
 				}
 			} else if(event.isCancelable() && !config.mayRightclick(event.getEntityPlayer(), event.getItemStack())) {
@@ -216,7 +216,7 @@ public class Conventional {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onEntityLeftclick(AttackEntityEvent event) {
-		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getTarget())) {
+		if(isAdventureMode(event.getEntityPlayer()) && !config.mayLeftclick(event.getEntityPlayer(), event.getTarget())) {
 			event.setCanceled(true);
 		}
 	}

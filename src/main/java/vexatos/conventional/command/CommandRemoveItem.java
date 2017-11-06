@@ -15,8 +15,12 @@ import vexatos.conventional.reference.Config;
 import vexatos.conventional.util.RegistryUtil;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Vexatos
@@ -40,7 +44,13 @@ public class CommandRemoveItem extends SubCommandWithArea {
 			if(uid == null) {
 				throw new CommandException("unable to find identifier for item: " + stack.getUnlocalizedName());
 			}
-			Pair<Item, Integer> pair = Pair.of(stack.getItem(), args.length >= 1 && args[0].equalsIgnoreCase("ignore") ? -1 : stack.getItemDamage());
+			List<String> modifiers = Arrays.stream(args).map(s -> s.toLowerCase(Locale.ENGLISH)).collect(Collectors.toList());
+			int meta = modifiers.contains("ignore") ? -1 : stack.getItemDamage();
+			if(modifiers.contains("sneak") && modifiers.contains("nosneak")) {
+				throw new CommandException("cannot specify 'sneak' and 'nosneak' at the same time.");
+			}
+			Boolean sneak = modifiers.contains("sneak") ? Boolean.TRUE : modifiers.contains("nosneak") ? Boolean.FALSE : null;
+			Pair<Item, Config.ItemData> pair = Pair.of(stack.getItem(), new Config.ItemData(meta, sneak));
 			if(!list.contains(pair)) {
 				throw new CommandException("item is not in the whitelist.");
 			}
@@ -52,14 +62,11 @@ public class CommandRemoveItem extends SubCommandWithArea {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/cv remove item [ignore] - Removes the item currently in your hand. 'ignore' makes it search for an entry that ignores metadata.";
+		return "/cv remove item [ignore] [sneak/nosneak] - Removes the item currently in your hand. 'ignore' makes it search for an entry that ignores metadata.";
 	}
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
-		if(args.length <= 1) {
-			return getListOfStringsMatchingLastWord(args, "ignore");
-		}
-		return super.getTabCompletions(server, sender, args, pos);
+		return Optional.ofNullable(CommandAddItem.tabCompletions(server, sender, args, pos)).orElseGet(() -> super.getTabCompletions(server, sender, args, pos));
 	}
 }
